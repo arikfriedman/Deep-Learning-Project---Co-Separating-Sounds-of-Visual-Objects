@@ -1,0 +1,53 @@
+from torch import nn
+import torchvision
+import torch
+import torch.nn.functional as F
+
+class ResNet18(nn.Module):
+
+    def __init__(self, original_resnet, pool_type, input_channel, with_fc, fc_in, fc_out):
+        super(ResNet18, self).__init__()
+        
+        # self.RN18 = torchvision.models.ResNet18(pretrained=True)
+        # for param in self.RN18.parameters():
+        #     param.requires_grad = False
+            
+        self.pool = pool_type
+        self.input_channel = input_channel
+        self.with_fc = with_fc
+
+        # since the ResNet18 should handle both visual and audio, we need to adjust the first conv layer accordingly, distinguished 
+        # using the "self.input_layer". this first layer will replace the first original ResNet18's layer. Similarly, the last 2 layers
+        # of the original Resnet18 are a fc layer and a softmax layer, which we are changing to our own fc layer, which its size also 
+        # depends on whether we are dealing with visual or audio:
+        self.conv1 = nn.Conv2d(self.input_channel, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        layers_list = [self.conv1]
+        layers_list.extend(list(original_resnet.children())[1:-2])
+        self.feature_extraction = nn.Sequential(*layers_list) #features before pooling
+        
+
+        if pool_type == 'conv1x1': # meaning visual 
+            self.conv1x1 = self.create_conv(512, 128, 1, 0) # from 512*7*7 to 128*7*7
+
+        if with_fc: # regarding visual and audio as well
+            self.fc = nn.Linear(fc_in, fc_out)
+
+    def forward(self, x):
+        x = self.feature_extraction(x)
+
+        if self.pool_type == 'maxpool':
+            x = F.adaptive_max_pool2d(x, 1)
+        elif self.pool_type == 'conv1x1':
+            x = self.conv1x1(x)
+
+        if self.with_fc:
+            x = x.view(x.size(0), -1) # we want to flatten the vector, x.size(0) holds the number of pictures/spectograms
+            x = self.fc(x)
+            if self.pool_type == 'conv1x1':
+                x = x.view(x.size(0), -1, 1, 1) # the visual tensor needs to have 4 dimensions so we go back from 2 to 4
+            return x
+        else:
+            return x
+        
+    def create_conv(self, x, y, z, w):
+        pas
