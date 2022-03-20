@@ -10,17 +10,22 @@ from AudioVisualSeparator import AudioVisualSeparator
 
 
 '''Download Data from YouTube'''
-path = "Data"
-jsonObj = json.load(open('MUSIC.json'))
-errorLog = datd.downloadDataFromJSON(path, jsonObj)
+# path = "Data"
+# jsonObj = json.load(open('MUSIC.json'))
+# errorLog = datd.downloadDataFromJSON(path, jsonObj)
 
-'''Load Data'''
-offset = 30
+'''Data Split'''
+
+offset = 10
 duration = 1
 fps = 8
 
+
 filePath = 'Data2'
 data = datl.loadDataFromFile(filePath, offset, duration, fps)
+
+'''Load Data'''
+
 
 '''Arrange cuda'''
 seed = 42
@@ -31,4 +36,4 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
 
 '''Build Model'''
-model = CoSeparationNet(ResNet101(), AudioVisualSeparator())
+model = CoSeparationNet(ResNet101(), )

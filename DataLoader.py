@@ -103,7 +103,7 @@ if __name__ != 'main':
 
 
 
-    
+
     # for i in range(len(data[0]['value'])):
     #     x = data[0]['value'][i]['audio']
         #pass
@@ -124,6 +124,6 @@ if __name__ != 'main':
     # fig, ax = plt.subplots()
     # img = librosa.display.specshow(S_db, ax=ax)
     # fig.colorbar(img, ax=ax)
-    #fig.show()
+    # fig.show()
     # input()
     #print(len(y))

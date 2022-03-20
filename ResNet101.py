@@ -9,5 +9,5 @@ class ResNet101(nn.Module):
             param.requires_grad = False
 
     def forward(self, X):
-        None
+        pass
         
