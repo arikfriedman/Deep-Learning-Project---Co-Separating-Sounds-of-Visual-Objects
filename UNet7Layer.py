@@ -63,6 +63,7 @@ class UNet7Layer(nn.Module):
         '''Adjust The Visual Vector To Be The Size Of The U-Net 7th Layer Vector:
         the output of the Resnet18 will be a 512 vector, we will replicate it 2*2 times to create a 512*2*2 block'''
         visual_in = visual_in.repeat(1, 1, down_7.shape[2], down_7.shape[3]) # down_7.shape[2] = 2, down_7.shape[3] = 2
+        '''check this command on a stub vector'''
 
         up_1 = self.up_layer1(torch.cat((visual_in, down_7), dim=1)) # here we concatenate the visual 512*2*2 block
         # to the 512*2*2 output of the down sampling to create a 1024*2*2 block
@@ -73,4 +74,6 @@ class UNet7Layer(nn.Module):
         up_6 = self.up_layer6(torch.cat((up_5, down_2), dim=1))
         up_7 = self.up_layer7(torch.cat((up_6, down_1), dim=1))
 
-        return up_7
+        '''check if down and up are symmetrical and if not, use crop for skip connections'''
+        mask = up_7
+        return mask
