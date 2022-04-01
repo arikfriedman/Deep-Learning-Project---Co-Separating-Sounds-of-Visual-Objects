@@ -4,7 +4,7 @@ from UNet7Layer import UNet7Layer
 from Classifier import Classifier
 
 class AudioVisualSeparator(nn.Module):
-    def __init__(self, nets):
+    def __init__(self):
         super(AudioVisualSeparator, self).__init__()
         self.visual = Visual().create_visual_vector()
         self.uNet7Layer = UNet7Layer()

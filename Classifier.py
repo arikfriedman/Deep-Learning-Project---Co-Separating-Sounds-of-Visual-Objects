@@ -3,6 +3,7 @@ import torchvision
 from ResNet18 import ResNet18
 
 class Classifier:
+    #classifier case - for weak loss
     def get_audio_classification(self, input_channel=3, fc_out=15, pretrained_weights='', class_amount=9):
         
         resnet = torchvision.models.resnet18(True)

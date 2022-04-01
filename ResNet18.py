@@ -48,6 +48,14 @@ class ResNet18(nn.Module):
             return x
         else:
             return x
+    
+    #add a convolution layer in the end of the model (for the visual case)
+    def create_convolution_layer(self, in_chnl, out_chnl, krnl, pad, batch_norm=True, Relu=True, stride=1):
+        layer = [nn.Conv2d(in_chnl, out_chnl, krnl, stride=stride, padding=pad)]
+        if batch_norm:
+            layer.append(nn.BatchNorm2d(out_chnl))
+        if Relu:
+            layer.append(nn.ReLU())
         
-    def create_conv(self, x, y, z, w):
-        pas
+        return nn.Sequential(*layer)
+        

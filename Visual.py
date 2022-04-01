@@ -3,6 +3,7 @@ import torchvision
 from ResNet18 import ResNet18
 
 class Visual:
+    #visual case
     def create_visual_vector(self, input_channel=3, fc_out=512, pretrained_weights=''):
         
         resnet = torchvision.models.resnet18(pretrained=True)
