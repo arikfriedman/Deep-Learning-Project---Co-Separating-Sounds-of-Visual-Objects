@@ -12,27 +12,32 @@ class AudioVisualSeparator(nn.Module):
 
     '''X is the input and will in a format of a dictionary with several entries'''
     def forward(self, X):
-        self_audio = X["audio"]
-        mixed_audio = X["mixed_audio"] + 1e-8    # in order to make sure we don't divide by 0
-        detected_object = X["detected_object"]
-        weak_labels = X["weak_lebels"]
+        videos = X["videos"]
+        self_audios = X["audios"]                #array includes both videos data - 2 values
+        mixed_audio = X["mixed_audio"] + 1e-10    # in order to make sure we don't divide by 0
+        detected_objects = X["detected_objects"]    #all detected objects in both video's'
+        weak_labels = X["weak_lebels"]              #a label per detected object
+        log_mixed_audio = torch.log(mixed_audio)
 
         ''' mixed audio and audio are after STFT '''
         
         # mask for the object
-        ground_mask = self_audio / mixed_audio
-        #should we clamp ? - mask = maks.clamp(0, 5)
+        ground_mask = self_audios / mixed_audio     #list of masks per video 
+        #should we clamp ? - mask = mask.clamp(0, 5)
 
         # Resnet18 for the visual part of the detected object
-        visual_vec = self.visual(detected_object)
+        visual_vecs = self.visual(detected_objects)
 
         # should we use here the forward func?
-        mask_pred = self.uNet7Layer(mixed_audio, visual_vec)
+        mask_preds = self.uNet7Layer(log_mixed_audio, visual_vecs)
 
-        mask_applied = mask_pred * mixed_audio
+        masks_applied = mask_preds * mixed_audio
 
         # after this there will be an iSTFT in the next layer of the net if we would like to hear the sound...
 
-        audio_label_pred = self.classifier(mask_applied)
+        audio_label_preds = self.classifier(torch.log(masks_applied + 1e-10))
 
-        return {"ground_mask" : ground_mask, "audio_label" : audio_label_pred, "audio_separated" : mask_applied}
+        return {"ground_masks" : ground_mask, "predicted_audio_labels" : audio_label_preds, "predicted_masks" : mask_preds, "predicted_spectrograms" : masks_applied,
+                "visual_objects" : visual_vecs, "mixed_audios" : mixed_audio, "videos" : videos}
+
+'''https://github.com/rhgao/co-separation/blob/bd4f4fd51f2d6090e1566d20d4e0d0c8d83dd842/models/audioVisual_model.py'''
