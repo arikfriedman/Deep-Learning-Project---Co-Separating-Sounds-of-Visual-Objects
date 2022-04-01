@@ -1,3 +1,0 @@
-# DeepProject
-
-Cool Project
