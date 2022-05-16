@@ -61,7 +61,6 @@ def iterate_files(dir):
                         cropped_image = crop(image_path, bbox)
                         cropped_image.save(dir_path)
 
-                    os.copyDir()...
                     count += 1
 
         elif os.path.isdir(file_path):

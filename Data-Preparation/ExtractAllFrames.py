@@ -4,8 +4,6 @@ import sys
 import os
 import subprocess
 
-count = 0
-
 
 def iterate_files(dir):
 
