@@ -44,7 +44,25 @@ def iterate_files(dir):
                                 conf2 = conf
                                 index2 = idx
 
-                                #extract bbox to jpeg
+                    #extract bbox to jpeg
+                    frame1 = arr[index1][adj]
+                    image_path = os.path.join(dir, "images")
+                    image_path = os.path.join(image_path, str(frame1) + ".jpg")
+                    bbox = arr[index1][3 + adj:]
+                    cropped_image = crop(image_path, bbox)
+                    dir_path = os.path.join(dir, str(count))
+                    os.mkfir(dir_path)
+                    cropped_image.save()
+                    if cls2 != -1:
+                        frame2 = arr[index2][adj]
+                        image_path = os.path.join(dir, "images")
+                        image_path = os.path.join(image_path, str(frame2) + ".jpg")
+                        bbox = arr[index2][3 + adj:]
+                        cropped_image = crop(image_path, bbox)
+                        cropped_image.save(dir_path)
+
+                    os.copyDir()...
+                    count += 1
 
         elif os.path.isdir(file_path):
             iterate_files(file_path)
