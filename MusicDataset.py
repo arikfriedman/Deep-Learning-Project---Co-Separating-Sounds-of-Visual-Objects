@@ -33,7 +33,7 @@ class MusicDataset(Dataset):
         objs = []
         labels = []
         audios = []
-
+self.path
         path1 = self.files[idx1]
         path2 = self.files[idx2]
 
@@ -56,6 +56,17 @@ class MusicDataset(Dataset):
             elif file.lower().endswith(('.wav', '.mp3')):
                 audio, sr = librosa.load(os.path.join(path1, file))
                 audios.append(audio)
+2 lists
+separate for valid
+    normalize audio
+    stft in batch
+    check if in train we have at leasts 1 object for each viedo
+add confidence bar when analizing objects
+leave erhu and not choose it, give it number 16
+
+
+
+
 
         audio = MusicDataset.mix_audios(audios)
         return objs, labels, audio

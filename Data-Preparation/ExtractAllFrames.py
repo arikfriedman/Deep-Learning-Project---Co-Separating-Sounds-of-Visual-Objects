@@ -14,13 +14,17 @@ def iterate_files(dir):
                 if item.lower().startswith('frames') and item.lower().endswith('.npy'):
                     npy_path = file_path
                     npy_name = item
-                    subprocess.Popen("./ExtractFramesFromNpy.py " + npy_path + " " + npy_name)
+                    subprocess.Popen(["python", "/home/dsi/ravivme/scripts/ExtractFramesFromNpy.py", npy_path, npy_name])
         elif os.path.isdir(file_path):
             iterate_files(file_path)
 
+check if there is images and if not print it
 
-if __name__ == "main":
+
+
+if __name__ == "__main__":
     # argument 1 is the root directory of the data
     root_dir = sys.argv[1]
     iterate_files(root_dir)
+    print("Done")
 
