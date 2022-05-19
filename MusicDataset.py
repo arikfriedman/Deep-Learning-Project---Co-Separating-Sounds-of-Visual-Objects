@@ -17,14 +17,18 @@ class MusicDataset(Dataset):
 
         self.size = len(self.files)
 
-        for _ in self.files:
-            self.size += 1
-
     def __len__(self):
         return self.size
 
     # returns a list of objects with their labels - between 2 to 4 objects
     def __getitem__(self, index):
+        mix_dir = os.path.join(self.path, self.files[index])
+        return
+
+
+
+
+
         idx1 = index
         idx2 = random.randint(0, self.size-1)
         if idx2 == idx1:
@@ -34,7 +38,7 @@ class MusicDataset(Dataset):
         labels = []
         audios = []
 self.path
-        path1 = self.files[idx1]
+        path1 = self.path + ... self.files[idx1]
         path2 = self.files[idx2]
 
         for file in os.listdir(path1):
