@@ -10,7 +10,7 @@ def iterate_files(dir, count, log):
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
         if file.lower().startswith('chunk'):
-            #print(count)
+            print(count)
             #count[0] += 1
             flag = False
             for item in os.listdir(file_path):
@@ -18,10 +18,11 @@ def iterate_files(dir, count, log):
                     count[1] += 1
                     flag = True
                     s = len(os.listdir(os.path.join(file_path, item)))
-                    if s != 1:
-                        log.write("-> " + str(s) + " detections in " + os.path.join(file_path, item) + "\n")
+                    log.write("[" + str(count[1]) + "] --->>> " + str(s) + " detections in " + os.path.join(file_path, item) + "\n")
+                    if s == 1:
+                        count[2] += 1
             if not flag:
-                print(file_path)
+                #print(file_path)
                 count[0] += 1
         elif os.path.isdir(file_path):
             iterate_files(file_path, count, log)
@@ -35,15 +36,16 @@ if __name__ == "__main__":
     except:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/DetectionsErrorsLog.txt", "w")
 
-    log.flush()
     log.write("\nDetections Errors : \n")
 
     root_dir = sys.argv[1]
-    count = [0, 0]
+    count = [0, 0, 0]
     iterate_files(root_dir, count, log)
+
     # now = datetime.now()
     # for i in range(1000000):
     #     pass
     #print(datetime.now() - now)
-    print("Done, not missing count = " + str(count[1]))
+    print("Done, number of chunks that have detection_dir = " + str(count[1]))
+    print("      number of chunks that have 1 file in detection_dir = " + str(count[2]))
 
