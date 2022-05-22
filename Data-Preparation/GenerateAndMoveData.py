@@ -9,6 +9,7 @@ import librosa
 import random
 import numpy as np
 import soundfile as sf
+import os
 
 def sample_wav(wav, size=65535):
     # we expand the audio if its too short (with tile)
@@ -58,7 +59,7 @@ def validChunk(path):
         f8 = len(os.listdir(os.path.join(path, crop_name))) > 0
 
     res = f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8
-    print(res)
+    #print( "-->> " + path + " : " + str(res))
 
     return res
 
@@ -71,8 +72,11 @@ Retrieves a dictionary for a single clip with the following structure:
 }
 '''
 def pickItems(path):
-    if not validChunk((path)):
+    if path is None:
         return None
+    if not validChunk(path):
+        return None
+    print("-->> " + path + " : " + str(True))
 
     obj_dict = {}
     wav_name = ""
@@ -88,20 +92,20 @@ def pickItems(path):
     audio, sr = librosa.load(os.path.join(path, wav_name), sr=11025)
     sample = sample_wav(audio)
     mags, phases = create_spectrogram(sample)
-    obj_dict['audio'] = {'wave': (wav, sr), 'stft': (mags, phases)}
+    obj_dict['audio'] = {'wave': (audio, sr), 'stft': (mags, phases)}
 
     obj_dict['images'] = []
     crop_path = os.path.join(path, crop_name)
     for bbox in os.listdir(crop_path):
         obj_dict['images'] += [(bbox.split('.')[0], Image.open(os.path.join(crop_path, bbox)).resize((224, 224)))]
 
-    vid_id = crop.split('_')[-1]
+    vid_id = crop_name.split('_')[-1]
     obj_dict['id'] = vid_id
 
     return obj_dict
 
 #retrieves a random different clip from the video class
-def pick_rand_clip(vid_class, base_path):
+def pick_rand_clip(vid_class, vid_id, base_path):
     path = base_path
     if random.randrange(0, 2) == 0:
         path = os.path.join(path, 'Solo')
@@ -111,27 +115,38 @@ def pick_rand_clip(vid_class, base_path):
     dirs = os.listdir(path)
     idx = random.randrange(0, len(dirs))
     dir_cls = dirs[idx]
-    while len(dirs) > 0 and (dir_cls == vid_class or dir_cls == '99'):
+    while len(dirs) > 1 and (dir_cls == vid_class or dir_cls == '99'):
         dirs.remove(dir_cls)
         idx = random.randrange(0, len(dirs))
         dir_cls = dirs[idx]
     path = os.path.join(path, dir_cls)
 
+
+    dirs = os.listdir(path)
+    idx = random.randrange(0, len(dirs))
+    dir_id = dirs[idx]
+    while len(dirs) > 1 and dir_id == vid_id:
+        dirs.remove(dir_id)
+        idx = random.randrange(0, len(dirs))
+        dir_id = dirs[idx]
+    path = os.path.join(path, dir_id)
+
     # chunk select
     dirs = os.listdir(path)
     idx = random.randrange(0, len(dirs))
     dir_chunk = dirs[idx]
-    while len(dirs) > 0 and not validChunk(os.path.join(path, dir_chunk)):
-        dirs.remove(dir_cls)
+    while len(dirs) > 1 and not validChunk(os.path.join(path, dir_chunk)):
+        dirs.remove(dir_chunk)
         idx = random.randrange(0, len(dirs))
         dir_chunk = dirs[idx]
+        print(os.path.join(path, dir_chunk))
 
     chunk_path = None
     if validChunk(os.path.join(path, dir_chunk)):
         chunk_path = os.path.join(path, dir_chunk)
     return chunk_path
 
-def iterate_files(dir, count, log, target='/dsi/gannot-lab/datasets/Music/Batches'):
+def iterate_files(dir, count, log, source, target='/dsi/gannot-lab/datasets/Music/Batches'):
 
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
@@ -149,20 +164,21 @@ def iterate_files(dir, count, log, target='/dsi/gannot-lab/datasets/Music/Batche
 
             obj1 = pickItems(file_path)
             if obj1 is None:
-                log.write("-->> obj-1 : could not pick items for " + file_path)
+                log.write("-->> obj-1 : could not pick items for " + file_path + "\n")
                 continue
 
             random_clip_path = None
+            #random_clip_path = file_path
+
             c = 0
+            vid_id = file_path.split('/')[-2]
             vid_class = file_path.split('/')[-3]
-            while random_clip_path == None:
-                random_clip_path = pick_rand_clip(vid_class, '/dsi/gannot-lab/datasets/Music/MUSIC_arme/Data/')
+            while random_clip_path == None and c < 50:
+                random_clip_path = pick_rand_clip(vid_class, vid_id, source)
                 c += 1
-                if c > 50:
-                    break
             obj2 = pickItems(random_clip_path)
             if obj2 is None:
-                log.write("-->> obj-2 : could not pick items for " + random_clip_path)
+                log.write("-->> obj-2 : could not pick items for " + str(random_clip_path) + "\n")
                 continue
             mix_stft = (obj1['audio']['wave'][0] + obj2['audio']['wave'][0]) / 2
             mix_stft = librosa.util.normalize(mix_stft)
@@ -174,12 +190,18 @@ def iterate_files(dir, count, log, target='/dsi/gannot-lab/datasets/Music/Batche
             count[1] += 1
 
             f5 = h5py.File(t_path, 'w')
-            f5.create_dataset(name='obj1', data=obj1)
-            f5.create_dataset(name='obj2', data=obj2)
+            f5.create_group('/obj1')
+            f5['obj1']['id'] = obj1['id']
+            #f5.create_group('/obj1/audio')
+            f5['obj1']['audio'] = obj1['audio']
+            #f5.create_group('/obj1/images')
+            f5['obj1']['images'] = obj1['images']
+            #f5.create_dataset(name='obj1', data=obj1)
+            #f5.create_dataset(name='obj2', data=obj2)
             f5.create_dataset(name='mix', data=(mix_mags, mix_phases))
 
         elif os.path.isdir(file_path):
-            iterate_files(file_path, count, log, target)
+            iterate_files(file_path, count, log, source, target)
 
 
 #pick for each video random other video and combine them together and normalize the audio
@@ -196,7 +218,8 @@ if __name__ == "__main__":
     # argument 1 is the root directory of the data
     root_dir = sys.argv[1]
     count = [0, 0]
-    iterate_files(root_dir, count, log)
+    source = '/dsi/gannot-lab/datasets/Music/Try/'
+    iterate_files(root_dir, count, log, source)
 
 
 '''
