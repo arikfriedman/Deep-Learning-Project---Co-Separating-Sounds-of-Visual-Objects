@@ -31,6 +31,28 @@ def create_spectrogram(wav, frame, hop):
     return mag, phase
 
 
+def iterate_files(dir, count, log):
+
+    for file in os.listdir(dir):
+        file_path = os.path.join(dir, file)
+
+        #Erhu performed really worse and not considered a genuine musical instrument detection
+        if file == "99":
+            continue
+
+        if file.lower().startswith('chunk'):
+            print(count)
+            count[0] += 1
+            flag = False
+            s = 0
+            for item in os.listdir(file_path):
+                if item.lower().startswith("cropped_"):
+                    pickItem()
+                if item.lower().startswith("wav"):
+                    pass
+        elif os.path.isdir(file_path):
+            iterate_files(file_path, count, log)
+
 
 #pick for each video random other video and combine them together and normalize the audio
 
@@ -39,7 +61,7 @@ if __name__ == "__main__":
 #    root_dir = sys.argv[1]
 #    dataset_dir = sys.argv[2]
     count = [0]
-    f = h5py.File(r'C:/Users/user/Desktop/try.h5', 'w')
+    f = h5py.File(r'C:/Users/user/Desktop/try.h5', 'a')
     #im = cv2.imread(r'C:/Users/user/Desktop/0.jpg')
     im = Image.open(r'C:/Users/user/Desktop/0.jpg')
     im = im.crop((0, 0, 300, 300))
@@ -75,8 +97,8 @@ if __name__ == "__main__":
 
     #print(im.shape)
     #f.create_dataset(name="image", data=im)
-    #f.create_dataset(name="audio_mags", data=mag)
+    #f.create_dataset(name="audio_mag", data=mag)
 
     print(list(f.keys()))
-#    print(f['audio_mags'])
+    print(f['audio_mag'][0])
     #print(f['image'])
