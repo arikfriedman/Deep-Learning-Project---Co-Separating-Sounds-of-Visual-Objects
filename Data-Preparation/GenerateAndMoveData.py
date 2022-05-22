@@ -1,8 +1,8 @@
-import torch
-import torchvision
+#import torch
+#import torchvision
 import sys
 import h5py
-import cv2
+#import cv2
 from PIL import Image
 import wave
 import librosa
@@ -86,7 +86,7 @@ def pickItems(path):
 
     #a tuple of audio, sr
     audio, sr = librosa.load(os.path.join(path, wav_name), sr=11025)
-    sample = sample_wav(audio, size)
+    sample = sample_wav(audio)
     mags, phases = create_spectrogram(sample)
     obj_dict['audio'] = {'wave': (wav, sr), 'stft': (mags, phases)}
 
@@ -112,7 +112,7 @@ def pick_rand_clip(vid_class, base_path):
     idx = random.randrange(0, len(dirs))
     dir_cls = dirs[idx]
     while len(dirs) > 0 and (dir_cls == vid_class or dir_cls == '99'):
-        dirs.remove[idx]
+        dirs.remove(dir_cls)
         idx = random.randrange(0, len(dirs))
         dir_cls = dirs[idx]
     path = os.path.join(path, dir_cls)
@@ -122,7 +122,7 @@ def pick_rand_clip(vid_class, base_path):
     idx = random.randrange(0, len(dirs))
     dir_chunk = dirs[idx]
     while len(dirs) > 0 and not validChunk(os.path.join(path, dir_chunk)):
-        dirs.remove[idx]
+        dirs.remove(dir_cls)
         idx = random.randrange(0, len(dirs))
         dir_chunk = dirs[idx]
 
@@ -131,7 +131,7 @@ def pick_rand_clip(vid_class, base_path):
         chunk_path = os.path.join(path, dir_chunk)
     return chunk_path
 
-def iterate_files(dir, count, log):
+def iterate_files(dir, count, log, target='/dsi/gannot-lab/datasets/Music/Batches'):
 
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
@@ -164,49 +164,70 @@ def iterate_files(dir, count, log):
             if obj2 is None:
                 log.write("-->> obj-2 : could not pick items for " + random_clip_path)
                 continue
-            mix_stft = ob1['audio']
+            mix_stft = (obj1['audio']['wave'][0] + obj2['audio']['wave'][0]) / 2
+            mix_stft = librosa.util.normalize(mix_stft)
+            sample = sample_wav(mix_stft)
+            mix_mags, mix_phases = create_spectrogram(sample)
+
+            #assume target exists
+            t_path = os.path.join(target, str(count[1]).zfill(6))
+            count[1] += 1
+
+            f5 = h5py.File(t_path, 'w')
+            f5.create_dataset(name='obj1', data=obj1)
+            f5.create_dataset(name='obj2', data=obj2)
+            f5.create_dataset(name='mix', data=(mix_mags, mix_phases))
 
         elif os.path.isdir(file_path):
-            iterate_files(file_path, count, log)
+            iterate_files(file_path, count, log, target)
 
 
 #pick for each video random other video and combine them together and normalize the audio
 
 if __name__ == "__main__":
 
-
     try:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/GeneratorErrorsLog.txt", "x")
     except:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/GeneratorErrorsLog.txt", "w")
 
-    log.write("\nGenerator Errors : \n")
+        log.write("\nGenerator Errors : \n")
 
     # argument 1 is the root directory of the data
-#    root_dir = sys.argv[1]
-#    dataset_dir = sys.argv[2]
-    count = [0]
-    f = h5py.File(r'C:/Users/user/Desktop/try.h5', 'a')
+    root_dir = sys.argv[1]
+    count = [0, 0]
+    iterate_files(root_dir, count, log)
+
+
+'''
+    #f = h5py.File(r'C:/Users/user/Desktop/try.h5', 'a')
     #im = cv2.imread(r'C:/Users/user/Desktop/0.jpg')
-    im = Image.open(r'C:/Users/user/Desktop/0.jpg')
-    im = im.crop((0, 0, 300, 300))
+    #im = Image.open(r'C:/Users/user/Desktop/0.jpg')
+    #im = im.crop((0, 0, 300, 300))
 
     #im.show()
 
-    im = im.resize((224, 224))
-    print(im.size)
-    im.show()
+    #im = im.resize((224, 224))
+    #print(im.size)
+    #im.show()
 
-    im = im.resize((224, 224))
-    print(im.size)
-    im.show()
+    #im = im.resize((224, 224))
+    #print(im.size)
+    #im.show()
 
     wav, rate = librosa.load('C:/Users/user/Desktop/wav_12.wav', sr=11025)
     wav2, rate2 = librosa.load('C:/Users/user/Desktop/wav_4.wav', sr=11025)
-    wav4 = librosa.util.normalize(wav)
+    wav3 = (librosa.util.normalize(wav) + librosa.util.normalize(wav2))
+    wav4 = librosa.util.normalize(wav3)
+    print(min(wav4))
     wav5 = librosa.util.normalize(wav2)
+    print(min(wav5))
     sf.write('C:/Users/user/Desktop/wav_13.wav', wav4, rate)
     sf.write('C:/Users/user/Desktop/wav_5.wav', wav5, rate)
+
+    a = 1
+    if a == 1:
+        exit(0)
 
     #wav = Wave('C:/Users/user/Desktop/wav_1.wav')
     #wav.start()
@@ -238,4 +259,4 @@ if __name__ == "__main__":
 
     print(list(f.keys()))
     print(f['audio_mag'][0])
-    #print(f['image'])
+    #print(f['image'])'''
