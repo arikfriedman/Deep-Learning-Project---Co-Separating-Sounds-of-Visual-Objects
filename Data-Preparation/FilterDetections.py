@@ -36,7 +36,7 @@ def hasDirs(path):
         f6 = len(os.listdir(os.path.join(path, 'image'))) > 0
 
     res = f1 and f2 and f3 and f4 and f5 and f6
-    print(res)
+    #print(res)
 
     return res
 

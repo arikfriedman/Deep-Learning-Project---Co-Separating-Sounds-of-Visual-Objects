@@ -10,7 +10,7 @@ import random
 import numpy as np
 import soundfile as sf
 
-def sample_wav(wav, size):
+def sample_wav(wav, size=65535):
     # we expand the audio if its too short (with tile)
     if wav.shape[0] < size:
         n = int(size / wav.shape[0]) + 1
@@ -22,7 +22,7 @@ def sample_wav(wav, size):
     return sample
 
 
-def create_spectrogram(wav, frame, hop):
+def create_spectrogram(wav, frame=1022, hop=256):
     trans = librosa.core.stft(wav, n_fft=frame, hop_length=hop, center=True)
     mag, phase = librosa.core.magphase(trans)
     #we treat it as array of arrays:
@@ -30,26 +30,142 @@ def create_spectrogram(wav, frame, hop):
     phase = np.expand_dims(np.angle(phase), axis=0)
     return mag, phase
 
+def validChunk(path):
+    f1, f2, f3, f4, f5, f6, f7, f8 = False, False, False, False, False, False, False, False
+
+    crop_name = ""
+
+    for file in os.listdir(path):
+        if file.endswith('.npy'):
+            f1 = True
+        if file == 'image':
+            f2 = True
+        if file == 'detection_results':
+            f3 = True
+        if file.startswith('wav'):
+            f4 = True
+        if file.startswith('cropped'):
+            f7 = True
+            crop_name = file
+    if f3:
+        for file in os.listdir(os.path.join(path, 'detection_results')):
+            if file == '.npy':
+                f5 = True
+    if f2:
+        f6 = len(os.listdir(os.path.join(path, 'image'))) > 0
+
+    if f7:
+        f8 = len(os.listdir(os.path.join(path, crop_name))) > 0
+
+    res = f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8
+    print(res)
+
+    return res
+
+'''
+Retrieves a dictionary for a single clip with the following structure:
+{
+'id' : video id number
+'audio' : { 'wave' : (wave, sr), 'stft' : (mags, phases) }
+'images' : [(class_id1, image), (class_id2, image),...] -> just 1 or 2 cropped images
+}
+'''
+def pickItems(path):
+    if not validChunk((path)):
+        return None
+
+    obj_dict = {}
+    wav_name = ""
+    crop_name = ""
+
+    for item in os.listdir(path):
+        if item.lower().startswith("cropped_"):
+            crop_name = item
+        if item.lower().startswith("wav"):
+            wav_name = item
+
+    #a tuple of audio, sr
+    audio, sr = librosa.load(os.path.join(path, wav_name), sr=11025)
+    sample = sample_wav(audio, size)
+    mags, phases = create_spectrogram(sample)
+    obj_dict['audio'] = {'wave': (wav, sr), 'stft': (mags, phases)}
+
+    obj_dict['images'] = []
+    crop_path = os.path.join(path, crop_name)
+    for bbox in os.listdir(crop_path):
+        obj_dict['images'] += [(bbox.split('.')[0], Image.open(os.path.join(crop_path, bbox)).resize((224, 224)))]
+
+    vid_id = crop.split('_')[-1]
+    obj_dict['id'] = vid_id
+
+    return obj_dict
+
+#retrieves a random different clip from the video class
+def pick_rand_clip(vid_class, base_path):
+    path = base_path
+    if random.randrange(0, 2) == 0:
+        path = os.path.join(path, 'Solo')
+    else:
+        path = os.path.join(path, 'Duet')
+
+    dirs = os.listdir(path)
+    idx = random.randrange(0, len(dirs))
+    dir_cls = dirs[idx]
+    while len(dirs) > 0 and (dir_cls == vid_class or dir_cls == '99'):
+        dirs.remove[idx]
+        idx = random.randrange(0, len(dirs))
+        dir_cls = dirs[idx]
+    path = os.path.join(path, dir_cls)
+
+    # chunk select
+    dirs = os.listdir(path)
+    idx = random.randrange(0, len(dirs))
+    dir_chunk = dirs[idx]
+    while len(dirs) > 0 and not validChunk(os.path.join(path, dir_chunk)):
+        dirs.remove[idx]
+        idx = random.randrange(0, len(dirs))
+        dir_chunk = dirs[idx]
+
+    chunk_path = None
+    if validChunk(os.path.join(path, dir_chunk)):
+        chunk_path = os.path.join(path, dir_chunk)
+    return chunk_path
 
 def iterate_files(dir, count, log):
 
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
 
-        #Erhu performed really worse and not considered a genuine musical instrument detection
+        #Erhu detection performed really worse and is not considered a genuine musical instrument detection
         if file == "99":
             continue
 
         if file.lower().startswith('chunk'):
+            if not validChunk(file_path):
+                continue
+
             print(count)
             count[0] += 1
-            flag = False
-            s = 0
-            for item in os.listdir(file_path):
-                if item.lower().startswith("cropped_"):
-                    pickItem()
-                if item.lower().startswith("wav"):
-                    pass
+
+            obj1 = pickItems(file_path)
+            if obj1 is None:
+                log.write("-->> obj-1 : could not pick items for " + file_path)
+                continue
+
+            random_clip_path = None
+            c = 0
+            vid_class = file_path.split('/')[-3]
+            while random_clip_path == None:
+                random_clip_path = pick_rand_clip(vid_class, '/dsi/gannot-lab/datasets/Music/MUSIC_arme/Data/')
+                c += 1
+                if c > 50:
+                    break
+            obj2 = pickItems(random_clip_path)
+            if obj2 is None:
+                log.write("-->> obj-2 : could not pick items for " + random_clip_path)
+                continue
+            mix_stft = ob1['audio']
+
         elif os.path.isdir(file_path):
             iterate_files(file_path, count, log)
 
@@ -57,6 +173,15 @@ def iterate_files(dir, count, log):
 #pick for each video random other video and combine them together and normalize the audio
 
 if __name__ == "__main__":
+
+
+    try:
+        log = open(r"/dsi/gannot-lab/datasets/Music/Logs/GeneratorErrorsLog.txt", "x")
+    except:
+        log = open(r"/dsi/gannot-lab/datasets/Music/Logs/GeneratorErrorsLog.txt", "w")
+
+    log.write("\nGenerator Errors : \n")
+
     # argument 1 is the root directory of the data
 #    root_dir = sys.argv[1]
 #    dataset_dir = sys.argv[2]
@@ -65,18 +190,30 @@ if __name__ == "__main__":
     #im = cv2.imread(r'C:/Users/user/Desktop/0.jpg')
     im = Image.open(r'C:/Users/user/Desktop/0.jpg')
     im = im.crop((0, 0, 300, 300))
+
     #im.show()
+
     im = im.resize((224, 224))
-    #im.show()
+    print(im.size)
+    im.show()
+
+    im = im.resize((224, 224))
+    print(im.size)
+    im.show()
 
     wav, rate = librosa.load('C:/Users/user/Desktop/wav_12.wav', sr=11025)
     wav2, rate2 = librosa.load('C:/Users/user/Desktop/wav_4.wav', sr=11025)
+    wav4 = librosa.util.normalize(wav)
+    wav5 = librosa.util.normalize(wav2)
+    sf.write('C:/Users/user/Desktop/wav_13.wav', wav4, rate)
+    sf.write('C:/Users/user/Desktop/wav_5.wav', wav5, rate)
+
     #wav = Wave('C:/Users/user/Desktop/wav_1.wav')
     #wav.start()
     #wav.overlay(wav2)
     wav3 = (wav + wav2) / 2
 
-    sf.write('C:/Users/user/Desktop/wav_11.wav', wav3, rate)
+#    sf.write('C:/Users/user/Desktop/wav_11.wav', wav3, rate)
     #audio.write_audiofile(filename=chunkPath + '/wav_' + str(index) + '.wav', codec='pcm_s32le')
     #wav = librosa.stft(wav)
     print("rate = " + str(rate))
