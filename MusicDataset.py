@@ -68,6 +68,9 @@ separate for valid
 add confidence bar when analizing objects
 leave erhu and not choose it, give it number 16
 
+->
+normalize all data
+check if json works
 
 
 

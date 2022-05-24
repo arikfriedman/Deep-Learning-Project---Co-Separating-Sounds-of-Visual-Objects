@@ -64,17 +64,19 @@ def validChunk(path):
     return res
 
 '''
-Retrieves a dictionary for a single clip with the following structure:
-{
-'id' : video id number
-'audio' : { 'wave' : (wave, sr), 'stft' : (mags, phases) }
-'images' : [(class_id1, image), (class_id2, image),...] -> just 1 or 2 cropped images
-}
+->  For a given chunk path:
+    Retrieves a dictionary for a single clip with the following structure:
+    {
+        'id'     :   video id number
+        'audio'  :   { 'wave' : (wave, sr), 'stft' : (mags, phases) }
+        'images' :   [(class_id1, image), (class_id2, image),...] -> just 1 or 2 cropped images
+    }
 '''
-def pickItems(path):
+def pickItems(path, log):
     if path is None:
         return None
     if not validChunk(path):
+        log.write("-> " + path + " is not a valid chunk")
         return None
     print("-->> " + path + " : " + str(True))
 
@@ -162,7 +164,7 @@ def iterate_files(dir, count, log, source, target='/dsi/gannot-lab/datasets/Musi
             print(count)
             count[0] += 1
 
-            obj1 = pickItems(file_path)
+            obj1 = pickItems(file_path, log)
             if obj1 is None:
                 log.write("-->> obj-1 : could not pick items for " + file_path + "\n")
                 continue
@@ -176,7 +178,7 @@ def iterate_files(dir, count, log, source, target='/dsi/gannot-lab/datasets/Musi
             while random_clip_path == None and c < 50:
                 random_clip_path = pick_rand_clip(vid_class, vid_id, source)
                 c += 1
-            obj2 = pickItems(random_clip_path)
+            obj2 = pickItems(random_clip_path, log)
             if obj2 is None:
                 log.write("-->> obj-2 : could not pick items for " + str(random_clip_path) + "\n")
                 continue
