@@ -32,11 +32,11 @@ if __name__ == "__main__":
     # argument 1 is the root directory of the data
 
     try:
-        log = open(r"/dsi/gannot-lab/datasets/Music/Logs/DetectionsErrorsLog.txt", "x")
+        log = open(r"/dsi/gannot-lab/datasets/Music/Logs/ScanDetectionsErrorsLog.txt", "x")
     except:
-        log = open(r"/dsi/gannot-lab/datasets/Music/Logs/DetectionsErrorsLog.txt", "w")
+        log = open(r"/dsi/gannot-lab/datasets/Music/Logs/ScanDetectionsErrorsLog.txt", "w")
 
-    log.write("\nDetections Errors : \n")
+    log.write("\nScan Detections Errors : \n")
 
     root_dir = sys.argv[1]
     count = [0, 0, 0]
