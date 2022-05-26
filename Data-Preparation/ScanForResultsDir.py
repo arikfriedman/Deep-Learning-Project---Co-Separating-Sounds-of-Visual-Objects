@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     try:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/ScanDetectionsErrorsLog.txt", "x")
-    except:
+    except OSError:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/ScanDetectionsErrorsLog.txt", "w")
 
     log.write("\nScan Detections Errors : \n")
