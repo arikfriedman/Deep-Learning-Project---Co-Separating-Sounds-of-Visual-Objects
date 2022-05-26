@@ -123,7 +123,7 @@ def iterate_files(root, count, log, parent):
 
             if parent == 'Duet' and cls2 != -1:
                 frame2 = int(arr[index2][adj])
-                image_path = os.path.join(dir_path, "image")
+                image_path = os.path.join(dir_path, "images")
                 image_path = os.path.join(image_path, str(frame2) + ".jpg")
                 bbox = arr[index2][3 + adj:]
 

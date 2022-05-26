@@ -22,7 +22,7 @@ def iterate_files(dir, count, log):
                         log.write("-> " + str(s) + " detections in " + os.path.join(file_path, item) + "\n")
             if not flag or s == 0:
                 for item in os.listdir(file_path):
-                    if item == "image":
+                    if item == "images":
                         images_path = os.path.join(file_path, item + '/')
                         print(images_path)
                         p = subprocess.call(["python",
