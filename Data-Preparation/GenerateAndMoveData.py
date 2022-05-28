@@ -31,7 +31,7 @@ def create_spectrogram(wav, frame=1022, hop=256):
     phase = np.expand_dims(np.angle(phase), axis=0)
     return mag, phase
 
-def validChunk(path):
+def validChunk(path, parent):
     f1, f2, f3, f4, f5, f6, f7, f8 = False, False, False, False, False, False, False, False
 
     crop_name = ""
@@ -39,13 +39,13 @@ def validChunk(path):
     for file in os.listdir(path):
         if file.endswith('.npy'):
             f1 = True
-        if file == 'image':
+        if file == 'images':
             f2 = True
         if file == 'detection_results':
             f3 = True
         if file.startswith('wav'):
             f4 = True
-        if file.startswith('cropped'):
+        if file.startswith('cropped_'):
             f7 = True
             crop_name = file
     if f3:
@@ -53,10 +53,14 @@ def validChunk(path):
             if file == '.npy':
                 f5 = True
     if f2:
-        f6 = len(os.listdir(os.path.join(path, 'image'))) > 0
+        f6 = len(os.listdir(os.path.join(path, 'images'))) > 0
 
     if f7:
-        f8 = len(os.listdir(os.path.join(path, crop_name))) > 0
+        crop = len(os.listdir(os.path.join(path, crop_name)))
+        if parent == 'Duet':
+            f8 = crop == 2
+        elif parent == 'Solo':
+            f8 = crop == 1
 
     res = f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8
     #print( "-->> " + path + " : " + str(res))
@@ -72,10 +76,10 @@ def validChunk(path):
         'images' :   [(class_id1, image), (class_id2, image),...] -> just 1 or 2 cropped images
     }
 '''
-def pickItems(path, log):
+def pickItems(path, log, parent):
     if path is None:
         return None
-    if not validChunk(path):
+    if not validChunk(path, parent):
         log.write("-> " + path + " is not a valid chunk")
         return None
     print("-->> " + path + " : " + str(True))
@@ -111,8 +115,10 @@ def pick_rand_clip(vid_class, vid_id, base_path):
     path = base_path
     if random.randrange(0, 2) == 0:
         path = os.path.join(path, 'Solo')
+        parent = 'Solo'
     else:
         path = os.path.join(path, 'Duet')
+        parent = 'Duet'
 
     dirs = os.listdir(path)
     idx = random.randrange(0, len(dirs))
@@ -137,34 +143,39 @@ def pick_rand_clip(vid_class, vid_id, base_path):
     dirs = os.listdir(path)
     idx = random.randrange(0, len(dirs))
     dir_chunk = dirs[idx]
-    while len(dirs) > 1 and not validChunk(os.path.join(path, dir_chunk)):
+    while len(dirs) > 1 and not validChunk(os.path.join(path, dir_chunk), parent):
         dirs.remove(dir_chunk)
         idx = random.randrange(0, len(dirs))
         dir_chunk = dirs[idx]
         print(os.path.join(path, dir_chunk))
 
     chunk_path = None
-    if validChunk(os.path.join(path, dir_chunk)):
+    if validChunk(os.path.join(path, dir_chunk), parent):
         chunk_path = os.path.join(path, dir_chunk)
-    return chunk_path
+    return chunk_path, parent
 
-def iterate_files(dir, count, log, source, target='/dsi/gannot-lab/datasets/Music/Batches'):
+def iterate_files(dir, count, log, parent, source, target=r'/dsi/gannot-lab/datasets/Music/Batches'):
 
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
+
+        if file == 'Duet':
+            parent = 'Duet'
+        if file == 'Solo':
+            parent = 'Solo'
 
         #Erhu detection performed really worse and is not considered a genuine musical instrument detection
         if file == "99":
             continue
 
         if file.lower().startswith('chunk'):
-            if not validChunk(file_path):
+            if not validChunk(file_path, parent):
                 continue
 
             print(count)
             count[0] += 1
 
-            obj1 = pickItems(file_path, log)
+            obj1 = pickItems(file_path, log, parent)
             if obj1 is None:
                 log.write("-->> obj-1 : could not pick items for " + file_path + "\n")
                 continue
@@ -175,10 +186,12 @@ def iterate_files(dir, count, log, source, target='/dsi/gannot-lab/datasets/Musi
             c = 0
             vid_id = file_path.split('/')[-2]
             vid_class = file_path.split('/')[-3]
-            while random_clip_path == None and c < 50:
-                random_clip_path = pick_rand_clip(vid_class, vid_id, source)
+            prob = 50
+
+            while random_clip_path == None and c < prob:
+                random_clip_path, parent2 = pick_rand_clip(vid_class, vid_id, source)
                 c += 1
-            obj2 = pickItems(random_clip_path, log)
+            obj2 = pickItems(random_clip_path, log, parent2)
             if obj2 is None:
                 log.write("-->> obj-2 : could not pick items for " + str(random_clip_path) + "\n")
                 continue
@@ -188,22 +201,19 @@ def iterate_files(dir, count, log, source, target='/dsi/gannot-lab/datasets/Musi
             mix_mags, mix_phases = create_spectrogram(sample)
 
             #assume target exists
-            t_path = os.path.join(target, str(count[1]).zfill(6))
+            t_path = os.path.join(target, str(count[1]).zfill(6), ".pickle")
             count[1] += 1
+            obj_dict = {
+                "obj1": obj1,
+                "obj2": obj2,
+                "mix": (mix_mags, mix_phases)
+            }
 
-            f5 = h5py.File(t_path, 'w')
-            f5.create_group('/obj1')
-            f5['obj1']['id'] = obj1['id']
-            #f5.create_group('/obj1/audio')
-            f5['obj1']['audio'] = obj1['audio']
-            #f5.create_group('/obj1/images')
-            f5['obj1']['images'] = obj1['images']
-            #f5.create_dataset(name='obj1', data=obj1)
-            #f5.create_dataset(name='obj2', data=obj2)
-            f5.create_dataset(name='mix', data=(mix_mags, mix_phases))
+            with open(t_path, 'wb') as handle:
+                pickle.dump(obj_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         elif os.path.isdir(file_path):
-            iterate_files(file_path, count, log, source, target)
+            iterate_files(file_path, count, log, parent, source, target)
 
 
 #pick for each video random other video and combine them together and normalize the audio
@@ -221,7 +231,7 @@ if __name__ == "__main__":
     root_dir = sys.argv[1]
     count = [0, 0]
     source = '/dsi/gannot-lab/datasets/Music/Try/'
-    iterate_files(root_dir, count, log, source)
+    iterate_files(root_dir, count, log, '', source)
 
 
 '''

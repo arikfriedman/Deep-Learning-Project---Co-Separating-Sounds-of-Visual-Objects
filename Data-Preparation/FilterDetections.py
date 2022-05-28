@@ -22,7 +22,7 @@ def hasDirs(path):
     for file in os.listdir(path):
         if file.endswith('.npy'):
             f1 = True
-        if file == 'image':
+        if file == 'images':
             f2 = True
         if file == 'detection_results':
             f3 = True
@@ -33,7 +33,7 @@ def hasDirs(path):
             if file == '.npy':
                 f5 = True
     if f2:
-        f6 = len(os.listdir(os.path.join(path, 'image'))) > 0
+        f6 = len(os.listdir(os.path.join(path, 'images'))) > 0
 
     res = f1 and f2 and f3 and f4 and f5 and f6
     #print(res)
@@ -54,6 +54,8 @@ def iterate_files(root, count, log, parent):
             print(count)
             count[0] += 1
             if not hasDirs(dir_path):
+                log.write("[" + str(count[1]) + "] --->>> " + dir_path + " is not a valid chunk\n")
+                count[1] += 1
                 continue
 
             detect_path = os.path.join(dir_path, 'detection_results')
@@ -104,7 +106,7 @@ def iterate_files(root, count, log, parent):
             #extract bbox to jpeg
             frame1 = int(arr[index1][adj])
             #dir ends with chunk_
-            image_path = os.path.join(dir_path, "image")
+            image_path = os.path.join(dir_path, "images")
             image_path = os.path.join(image_path, str(frame1) + ".jpg")
             bbox = arr[index1][3 + adj:]
 
@@ -147,6 +149,6 @@ if __name__ == "__main__":
 
     # argument 1 is the root directory of the data
     root_dir = sys.argv[1]
-    iterate_files(root_dir, [0], log, '')
+    iterate_files(root_dir, [0, 0], log, '')
     print("Done")
 
