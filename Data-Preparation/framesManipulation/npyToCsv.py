@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # create a dummy array
-arr = np.load(r"C:\Users\user\Desktop\0003.npy")
+arr = np.load(r"C:\Users\user\Desktop\hi.npy")
 
 # display the array
 #print(arr)
@@ -12,4 +12,4 @@ arr = np.load(r"C:\Users\user\Desktop\0003.npy")
 DF = pd.DataFrame(arr)
 
 # save the dataframe as a csv file
-DF.to_csv(r"C:\Users\user\Desktop\det0003.csv")
+DF.to_csv(r"C:\Users\user\Desktop\detHi.csv")

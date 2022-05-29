@@ -4,6 +4,7 @@ import sys
 import os
 import numpy as np
 from PIL import Image
+import shutil
 
 def cropAndResize(image_path, bbox, log):
     try:
@@ -15,6 +16,33 @@ def cropAndResize(image_path, bbox, log):
     im = im.crop(bbox)
     im = im.resize((224, 224))
     return im
+
+def area(box):
+    w = abs(box[0] - box[2])
+    h = abs(box[1] - box[3])
+    return w * h
+
+def cut(b1, b2, log, file):
+    if b1[0] > b1[2] or b1[1] > b1[3]:
+        log.write("Error with bbox 1 of " + file)
+    if b2[0] > b2[2] or b2[1] > b2[3]:
+        log.write("Error with bbox 2 of " + file)
+    x0 = max(b1[0], b2[0])
+    y0 = max(b1[1], b2[1])
+    x1 = min(b1[2], b2[2])
+    y1 = min(b1[3], b2[3])
+    return [x0, y0, x1, y1]
+
+def overlap(bbox1, bbox2, log, file):
+    A1 = area(bbox1)
+    A2 = area(bbox2)
+    cutbox = area(cut(bbox1, bbox2, log, file))
+    # print("")
+    # print(bbox1)
+    # print(bbox2)
+    # print(str(A1) + " , " + str(A2) + " , " + str(cutbox))
+    # print("")
+    return cutbox / (A1 + A2) > 0.4
 
 def hasDirs(path):
     f1, f2, f3, f4, f5, f6 = False, False, False, False, False, False
@@ -40,7 +68,7 @@ def hasDirs(path):
 
     return res
 
-def iterate_files(root, count, log, parent):
+def iterate_files(root, count, log, parent, conf_bar = 0.89):
 
     for dir in os.listdir(root):
         dir_path = os.path.join(root, dir)
@@ -71,11 +99,20 @@ def iterate_files(root, count, log, parent):
                 adj = 1
 
             conf1 = 0
+            confmax = 0
+            cls1 = -1
             for idx, tup in enumerate(arr):
-                if arr[idx][2+adj] > conf1:
+                confmax = max(confmax, arr[idx][2+adj])
+                if arr[idx][2+adj] > conf1 and arr[idx][2+adj] > conf_bar:
                     conf1 = arr[idx][2+adj]
                     index1 = idx
                     cls1 = arr[idx][1+adj]
+
+            if cls1 == -1:
+                log.write("-->> highest confidence for " + dir_path + " is : " + str(confmax) + "\n")
+                continue
+
+            bbox1 = arr[index1][3 + adj:]
 
             #cls1 = arr[0][1+adj]
             #conf1 = arr[0][2+adj]
@@ -88,8 +125,13 @@ def iterate_files(root, count, log, parent):
             for idx, tup in enumerate(arr):
                 cls = arr[idx][1+adj]
                 conf = arr[idx][2+adj]
+                bbox2 = arr[idx][3 + adj:]
+                if arr[idx][2 + adj] < conf_bar:
+                    continue
 
                 if cls != cls1:
+                    if overlap(bbox1, bbox2, log, dir_path):
+                        continue
                     if cls2 == -1:
                         cls2 = cls
                         conf2 = conf
@@ -116,6 +158,11 @@ def iterate_files(root, count, log, parent):
 
             vid_num = dir_path.split('/')[-2]
             crop_path = os.path.join(dir_path, "cropped_" + vid_num)
+            try:
+                shutil.rmtree(crop_path)
+            except OSError:
+                pass
+
             try:
                 os.mkdir(crop_path)
             except OSError:

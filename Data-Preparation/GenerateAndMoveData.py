@@ -1,7 +1,11 @@
+"""
+Important: we might have 2 classes with the same bbox due to the Detector results
+"""
+
 #import torch
 #import torchvision
 import sys
-import h5py
+#import h5py
 #import cv2
 from PIL import Image
 import wave
@@ -10,6 +14,7 @@ import random
 import numpy as np
 import soundfile as sf
 import os
+import pickle
 
 def sample_wav(wav, size=65535):
     # we expand the audio if its too short (with tile)
@@ -67,6 +72,9 @@ def validChunk(path, parent):
 
     return res
 
+def overlap(b1, b2):
+    pass
+
 '''
 ->  For a given chunk path:
     Retrieves a dictionary for a single clip with the following structure:
@@ -96,6 +104,9 @@ def pickItems(path, log, parent):
 
     #a tuple of audio, sr
     audio, sr = librosa.load(os.path.join(path, wav_name), sr=11025)
+    min_a = min(audio)
+    max_a = max(audio)
+    audio = 2 * (audio - min_a) / (max_a - min_a) - 1
     sample = sample_wav(audio)
     mags, phases = create_spectrogram(sample)
     obj_dict['audio'] = {'wave': (audio, sr), 'stft': (mags, phases)}
@@ -103,7 +114,12 @@ def pickItems(path, log, parent):
     obj_dict['images'] = []
     crop_path = os.path.join(path, crop_name)
     for bbox in os.listdir(crop_path):
-        obj_dict['images'] += [(bbox.split('.')[0], Image.open(os.path.join(crop_path, bbox)).resize((224, 224)))]
+        im = Image.open(os.path.join(crop_path, bbox)).resize((224, 224))
+        pix = np.asarray(im).astype('float32')
+        min_p = pix.min()
+        max_p = pix.max()
+        pix = (pix - min_p) / (max_p - min_p)
+        obj_dict['images'] += [(bbox.split('.')[0], pix)]
 
     vid_id = crop_name.split('_')[-1]
     obj_dict['id'] = vid_id
@@ -129,6 +145,8 @@ def pick_rand_clip(vid_class, vid_id, base_path):
         dir_cls = dirs[idx]
     path = os.path.join(path, dir_cls)
 
+    if dir_cls == '99':
+        return None
 
     dirs = os.listdir(path)
     idx = random.randrange(0, len(dirs))
@@ -147,7 +165,7 @@ def pick_rand_clip(vid_class, vid_id, base_path):
         dirs.remove(dir_chunk)
         idx = random.randrange(0, len(dirs))
         dir_chunk = dirs[idx]
-        print(os.path.join(path, dir_chunk))
+        #print(os.path.join(path, dir_chunk))
 
     chunk_path = None
     if validChunk(os.path.join(path, dir_chunk), parent):
@@ -170,47 +188,56 @@ def iterate_files(dir, count, log, parent, source, target=r'/dsi/gannot-lab/data
 
         if file.lower().startswith('chunk'):
             if not validChunk(file_path, parent):
+                log.write("\n-->> " + file_path + " : not a vliad chunk\n")
                 continue
 
-            print(count)
-            count[0] += 1
+            try:
+                print(count)
+                count[0] += 1
 
-            obj1 = pickItems(file_path, log, parent)
-            if obj1 is None:
-                log.write("-->> obj-1 : could not pick items for " + file_path + "\n")
-                continue
+                obj1 = pickItems(file_path, log, parent)
+                if obj1 is None:
+                    log.write("\n-->> obj-1 : could not pick items for " + file_path + "\n")
+                    continue
 
-            random_clip_path = None
-            #random_clip_path = file_path
+                random_clip_path = None
+                #random_clip_path = file_path
 
-            c = 0
-            vid_id = file_path.split('/')[-2]
-            vid_class = file_path.split('/')[-3]
-            prob = 50
+                c = 0
+                vid_id = file_path.split('/')[-2]
+                vid_class = file_path.split('/')[-3]
+                prob = 50
 
-            while random_clip_path == None and c < prob:
-                random_clip_path, parent2 = pick_rand_clip(vid_class, vid_id, source)
-                c += 1
-            obj2 = pickItems(random_clip_path, log, parent2)
-            if obj2 is None:
-                log.write("-->> obj-2 : could not pick items for " + str(random_clip_path) + "\n")
-                continue
-            mix_stft = (obj1['audio']['wave'][0] + obj2['audio']['wave'][0]) / 2
-            mix_stft = librosa.util.normalize(mix_stft)
-            sample = sample_wav(mix_stft)
-            mix_mags, mix_phases = create_spectrogram(sample)
+                while random_clip_path == None and c < prob:
+                    random_clip_path, parent2 = pick_rand_clip(vid_class, vid_id, source)
+                    c += 1
+                obj2 = pickItems(random_clip_path, log, parent2)
+                if obj2 is None:
+                    log.write("-->> obj-2 : could not pick items for " + str(random_clip_path) + "\n")
+                    continue
+                mix_stft = (obj1['audio']['wave'][0] + obj2['audio']['wave'][0]) / 2
+                mix_stft = librosa.util.normalize(mix_stft)
+                sample = sample_wav(mix_stft)
+                mix_mags, mix_phases = create_spectrogram(sample)
 
-            #assume target exists
-            t_path = os.path.join(target, str(count[1]).zfill(6), ".pickle")
-            count[1] += 1
-            obj_dict = {
-                "obj1": obj1,
-                "obj2": obj2,
-                "mix": (mix_mags, mix_phases)
-            }
+                #assume target exists
+                t_path = os.path.join(target, str(count[1]).zfill(6) + ".pickle")
+                count[1] += 1
+                obj_dict = {
+                    "obj1": obj1,
+                    "obj2": obj2,
+                    "mix": (mix_mags, mix_phases)
+                }
 
-            with open(t_path, 'wb') as handle:
-                pickle.dump(obj_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                with open(t_path, 'wb') as handle:
+                    pickle.dump(obj_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                    log.write("\n---------------------------------------------------------------------------\n" +
+                              "-->> " + file_path +
+                              "\n&&&&\n" +
+                              "-->> " + random_clip_path +
+                              "\n---------------------------------------------------------------------------\n")
+            except Exception as exc:
+                log.write("error with file " + file_path + " with : " + str(exc) + "\n")
 
         elif os.path.isdir(file_path):
             iterate_files(file_path, count, log, parent, source, target)
@@ -230,7 +257,9 @@ if __name__ == "__main__":
     # argument 1 is the root directory of the data
     root_dir = sys.argv[1]
     count = [0, 0]
-    source = '/dsi/gannot-lab/datasets/Music/Try/'
+    source = root_dir           #'/dsi/gannot-lab/datasets/Music/Try/'
+    iterate_files(root_dir, count, log, '', source)
+    print("Second Round")
     iterate_files(root_dir, count, log, '', source)
 
 
