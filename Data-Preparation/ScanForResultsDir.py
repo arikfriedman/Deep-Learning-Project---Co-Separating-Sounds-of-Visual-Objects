@@ -2,6 +2,7 @@ import torch
 import torchvision
 import sys
 import os
+from datetime import datetime as dt
 import subprocess
 from datetime import datetime
 
@@ -36,6 +37,7 @@ if __name__ == "__main__":
     except OSError:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/ScanDetectionsErrorsLog.txt", "w")
 
+    log.write("\nTime Stamp : " + str(dt.date(dt.now())) + " , " + str(dt.now().strftime("%H:%M:%S")) + "\n")
     log.write("\nScan Detections Errors : \n")
 
     root_dir = sys.argv[1]

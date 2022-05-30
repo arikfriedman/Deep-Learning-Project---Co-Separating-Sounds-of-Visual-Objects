@@ -4,6 +4,7 @@ import sys
 import os
 import subprocess
 from datetime import datetime
+from datetime import datetime as dt
 
 def iterate_files(dir, count, log):
 
@@ -55,6 +56,7 @@ if __name__ == "__main__":
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/DetectionsErrorsLog.txt", "w")
 
     log.flush()
+    log.write("\nTime Stamp : " + str(dt.date(dt.now())) + " , " + str(dt.now().strftime("%H:%M:%S")) + "\n")
     log.write("\nDetections Errors : \n")
 
     root_dir = sys.argv[1]

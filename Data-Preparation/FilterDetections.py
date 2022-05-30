@@ -5,6 +5,7 @@ import os
 import numpy as np
 from PIL import Image
 import shutil
+from datetime import datetime as dt
 
 def cropAndResize(image_path, bbox, log):
     try:
@@ -192,6 +193,7 @@ if __name__ == "__main__":
     except:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/FilterErrorsLog.txt", "w")
 
+    log.write("\nTime Stamp : " + str(dt.date(dt.now())) + " , " + str(dt.now().strftime("%H:%M:%S")) + "\n")
     log.write("\nFilter Errors : \n")
 
     # argument 1 is the root directory of the data

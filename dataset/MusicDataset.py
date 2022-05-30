@@ -7,8 +7,8 @@ from torchvision.io import read_image
 # the files in obj_path will be enumerated from 00000_classx_classy to 09876_classz_class_w for instance
 class MusicDataset(Dataset):
 
-    def __init__(self, obj_path):
-        self.path = obj_path
+    def __init__(self, data_dir, transform, train=True):
+        self.path = data_dir
         try:
             self.files = os.listdir(self.path)
             self.files.sort()

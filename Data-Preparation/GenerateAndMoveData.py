@@ -15,6 +15,7 @@ import numpy as np
 import soundfile as sf
 import os
 import pickle
+from datetime import datetime as dt
 
 def sample_wav(wav, size=65535):
     # we expand the audio if its too short (with tile)
@@ -231,10 +232,10 @@ def iterate_files(dir, count, log, parent, source, target=r'/dsi/gannot-lab/data
 
                 with open(t_path, 'wb') as handle:
                     pickle.dump(obj_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                    log.write("\n---------------------------------------------------------------------------\n" +
-                              "-->> " + file_path +
-                              "\n&&&&\n" +
-                              "-->> " + random_clip_path +
+                    log.write("\n---------------------------------------------------------------------------\n[" +
+                              str(count[1]).zfill(6) + "] -->> " + file_path +
+                              "\n\n" +
+                              "         -->> " + random_clip_path +
                               "\n---------------------------------------------------------------------------\n")
             except Exception as exc:
                 log.write("error with file " + file_path + " with : " + str(exc) + "\n")
@@ -246,20 +247,23 @@ def iterate_files(dir, count, log, parent, source, target=r'/dsi/gannot-lab/data
 #pick for each video random other video and combine them together and normalize the audio
 
 if __name__ == "__main__":
+    #print("\nTime Stamp : " + str(dt.date(dt.now())) + " , " + str(dt.now().strftime("%H:%M:%S")) + "\n")
 
     try:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/GeneratorErrorsLog.txt", "x")
     except:
         log = open(r"/dsi/gannot-lab/datasets/Music/Logs/GeneratorErrorsLog.txt", "w")
 
-        log.write("\nGenerator Errors : \n")
+    log.write("\nTime Stamp : " + str(dt.date(dt.now())) + " , " + str(dt.now().strftime("%H:%M:%S")) + "\n")
+    log.write("\nGenerator Errors : \n")
 
     # argument 1 is the root directory of the data
     root_dir = sys.argv[1]
     count = [0, 0]
     source = root_dir           #'/dsi/gannot-lab/datasets/Music/Try/'
     iterate_files(root_dir, count, log, '', source)
-    print("Second Round")
+    print("\n---------------SECOND ROUND------------------\n")
+    log.write("\n---------------SECOND ROUND------------------\n")
     iterate_files(root_dir, count, log, '', source)
 
 
