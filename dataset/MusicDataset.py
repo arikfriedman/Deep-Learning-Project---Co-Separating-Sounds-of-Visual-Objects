@@ -34,4 +34,12 @@ class MusicDataset(Dataset):
         return pick
 
 
-separate for valid
+'''
+
+separate for validation
+
+find jpgs mean and std
+apply trsfm in music dataset
+normalize:  check for audio when to norm
+
+'''
