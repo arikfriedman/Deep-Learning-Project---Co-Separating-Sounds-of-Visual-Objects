@@ -27,7 +27,19 @@ class ResNet18(nn.Module):
         
 
         if pool_type == 'conv1x1': # meaning visual 
-            self.conv1x1 = self.create_conv(512, 128, 1, 0) # from 512*7*7 to 128*7*7
+            self.conv1x1 = self.create_convolution_layer(512, 128, 1, 0) # from 512*7*7 to 128*7*7
+
+
+
+
+
+
+            #apply weigts...
+
+
+
+
+
 
         if with_fc: # regarding visual and audio as well
             self.fc = nn.Linear(fc_in, fc_out)

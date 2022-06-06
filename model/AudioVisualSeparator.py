@@ -1,7 +1,7 @@
 from torch import nn
-from Visual import Visual
-from UNet7Layer import UNet7Layer
-from Classifier import Classifier
+from .Visual import Visual
+from .UNet7Layer import UNet7Layer
+from .Classifier import Classifier
 
 class AudioVisualSeparator(nn.Module):
     def __init__(self):

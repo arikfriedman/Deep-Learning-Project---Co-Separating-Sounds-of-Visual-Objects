@@ -2,9 +2,21 @@ import numpy as np
 from PIL import Image
 import torchvision.transforms as T
 import torch
+from model.AudioVisualSeparator import AudioVisualSeparator
 
 if __name__ == "__main__":
-    path = r"C:\Users\user\Desktop\etc\chunk_10\cropped_000011\39.jpg"
+    mod = AudioVisualSeparator()
+    for param in mod.parameters():
+        print(param)
+    mod.forward(X)
+
+
+
+
+
+    #path = r"C:\Users\user\Desktop\etc\chunk_10\cropped_000011\39.jpg"
+
+    '''
     im = Image.open(path).resize((224, 224))
     #im.show()
 
@@ -33,3 +45,4 @@ if __name__ == "__main__":
     #print(np.std(a[0][:][:][2]))
     #print(a[0][3])
     #print(len(a[0]))
+    '''

@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from ResNet18 import ResNet18
+from .ResNet18 import ResNet18
 
 class Visual:
     #visual case

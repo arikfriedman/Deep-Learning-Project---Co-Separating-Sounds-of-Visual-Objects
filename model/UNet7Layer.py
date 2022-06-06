@@ -44,7 +44,7 @@ class UNet7Layer(nn.Module):
                                       nn.ReLU(True)])
         self.up_layer5 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*8, out_channels=next_layer_frames*2, kernel_size=4, stride=2, padding=1),
                                       nn.BatchNorm2d(output),
-                                      nn.ReLU(0.2, True)])
+                                      nn.ReLU(True)])
         self.up_layer6 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*4, out_channels=next_layer_frames, kernel_size=4, stride=2, padding=1),
                                       nn.BatchNorm2d(output),
                                       nn.ReLU(True)])
