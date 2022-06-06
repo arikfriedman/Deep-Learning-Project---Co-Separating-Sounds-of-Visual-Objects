@@ -7,7 +7,7 @@ class MusicDataLoader(BaseDataLoader):
     def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True):
         trsfm = transforms.Compose([
             transforms.ToTensor(),
-#            transforms.Normalize((0.1307,), (0.3081,))  #????
+            transforms.Normalize((0.2971, 0.3311, 0.4041), (0.0418, 0.0450, 0.0457))
         ])
         self.data_dir = data_dir
         self.dataset = MusicDataset(self.data_dir, transform=trsfm, train=training)

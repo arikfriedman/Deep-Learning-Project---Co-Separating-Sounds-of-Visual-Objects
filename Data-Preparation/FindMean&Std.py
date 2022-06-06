@@ -7,8 +7,9 @@ import subprocess
 from datetime import datetime
 from datetime import datetime as dt
 import numpy as np
+from PIL import Image
 
-def iterate_files(dir, count):
+def iterate_files(dir, count, pic_tensor):
 
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
@@ -34,11 +35,11 @@ def iterate_files(dir, count):
 if __name__ == "__main__":
     # argument 1 is the root directory of the data
 
-    path = r"/dsi/gannot-lab/datasets/Music/MUSIC_arme/Data/Duet/4_9/"...
+    path = r"/dsi/gannot-lab/datasets/Music/MUSIC_arme/Data/Duet/11_15/000000/chunk_0/cropped_000000/8.jpg"
     im1 = Image.open(path)
-    tim1 = T.ToTensor()(im)
+    tim1 = T.ToTensor()(im1)
 
-    root_dir = sys.argv[1]
+    root_dir = r"/dsi/gannot-lab/datasets/Music/MUSIC_arme/Data/"   #sys.argv[1]
     count = [0, 0]
     pic_tensor = tim1
     pic_tensor -= tim1
