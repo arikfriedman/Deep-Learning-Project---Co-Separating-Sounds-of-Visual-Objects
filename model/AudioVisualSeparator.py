@@ -1,7 +1,11 @@
 from torch import nn
+import torch
 from .Visual import Visual
 from .UNet7Layer import UNet7Layer
 from .Classifier import Classifier
+from torch.autograd import Variable
+import torchvision.transforms as T
+import numpy as np
 
 class AudioVisualSeparator(nn.Module):
     def __init__(self):
@@ -12,12 +16,26 @@ class AudioVisualSeparator(nn.Module):
 
     '''X is the input and will in a format of a dictionary with several entries'''
     def forward(self, X):
-#        videos = X["videos"]
-        self_audios = [X['obj1']['audio']['wave'], X['obj2']['audio']['wave']]  #array includes both videos data - 2 values
-        mixed_audio = X['mix'][0] + 1e-10    # in order to make sure we don't divide by 0
-        detected_objects = X["detected_objects"]    #all detected objects in both video's'
-        weak_labels = X["weak_lebels"]              #a label per detected object
-        log_mixed_audio = torch.log(mixed_audio)
+        videos = [X['obj1']['id']] + [X['obj2']['id']]
+        self_audios = [X['obj1']['audio']['stft'][0], X['obj2']['audio']['stft'][0]]  #array includes both videos data - 2 values
+        self_audios = np.vstack(self_audios)
+
+        detected_objects = [T.ToTensor()(c[1]).unsqueeze(0) for c in X['obj1']['images'][:]] +\
+                           [T.ToTensor()(c[1]).unsqueeze(0) for c in X['obj2']['images'][:]]    #all detected objects in both video's'
+        num_objs = len(detected_objects)
+        mixed_audio = []
+        mix = X['mix'][0]
+        for n in range(num_objs):
+            mixed_audio.append(torch.FloatTensor(mix).unsqueeze(0))
+        mixed_audio = np.vstack(mixed_audio)
+        mixed_audio = mixed_audio + 1e-10  # in order to make sure we don't divide by 0
+        mixed_audio = torch.from_numpy(mixed_audio)
+
+        detected_objects = np.vstack(detected_objects)
+        detected_objects = torch.from_numpy(detected_objects)
+        #detected_objects = T.ToTensor()(detected_objects)
+        weak_labels = [c[0] for c in X['obj1']['images'][:]] + [c[0] for c in X['obj2']['images'][:]]              #a label per detected object
+        log_mixed_audio = torch.log(mixed_audio).detach()
 
         ''' mixed audio and audio are after STFT '''
         
@@ -26,7 +44,7 @@ class AudioVisualSeparator(nn.Module):
         #should we clamp ? - mask = mask.clamp(0, 5)
 
         # Resnet18 for the visual part of the detected object
-        visual_vecs = self.visual(detected_objects)
+        visual_vecs = self.visual(Variable(detected_objects, requires_grad=False))
 
         # should we use here the forward func?
         mask_preds = self.uNet7Layer(log_mixed_audio, visual_vecs)

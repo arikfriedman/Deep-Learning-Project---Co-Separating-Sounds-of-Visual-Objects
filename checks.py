@@ -3,13 +3,39 @@ from PIL import Image
 import torchvision.transforms as T
 import torch
 from model.AudioVisualSeparator import AudioVisualSeparator
+import pickle
 
 if __name__ == "__main__":
     mod = AudioVisualSeparator()
     for param in mod.parameters():
-        print(param)
-    mod.forward(X)
+        pass
+        #print(type(param), param.size())
 
+    file_path = r'C:\Users\user\Desktop\000000.pickle'
+    try:
+        mix_file = open(file_path, 'rb')
+        pick = pickle.load(mix_file)
+        mix_file.close()
+    except OSError as err:
+        #self.log.write("-->> Error with file " + file_path)
+        pick = None
+        print(err)
+        exit(-1)
+
+    X = pick
+    t = X['obj1']['images'][:]
+    print(len([c[1] for c in X['obj1']['images'][:]] + [c[1] for c in X['obj2']['images'][:]]))
+    mix = T.ToTensor()(X['mix'][0])
+    print(mix.shape)
+    #print(T.ToTensor()(mix).shape)
+    k = T.ToTensor()(X['obj1']['images'][0][1]).unsqueeze(0)
+    k = np.vstack(k)
+    print(k.shape)
+    Y = None
+    print("len : " + str(len([[X['obj1']['audio']['stft']], [X['obj2']['audio']['stft']]][0][0])))
+
+    Y = mod.forward(X)
+    print(Y)
 
 
 

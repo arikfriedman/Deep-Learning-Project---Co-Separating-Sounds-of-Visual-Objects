@@ -12,7 +12,7 @@ class ResNet18(nn.Module):
         # for param in self.RN18.parameters():
         #     param.requires_grad = False
             
-        self.pool = pool_type
+        self.pool_type = pool_type
         self.input_channel = input_channel
         self.with_fc = with_fc
 
@@ -29,16 +29,7 @@ class ResNet18(nn.Module):
         if pool_type == 'conv1x1': # meaning visual 
             self.conv1x1 = self.create_convolution_layer(512, 128, 1, 0) # from 512*7*7 to 128*7*7
 
-
-
-
-
-
-            #apply weigts...
-
-
-
-
+            #apply weigts...?
 
 
         if with_fc: # regarding visual and audio as well
