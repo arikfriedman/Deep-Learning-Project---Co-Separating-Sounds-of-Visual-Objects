@@ -31,22 +31,22 @@ class UNet7Layer(nn.Module):
         channels from 512*2*2 to 1024*2*2'''
 
         self.up_layer1 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*16, out_channels=next_layer_frames*8, kernel_size=4, stride=2, padding=1),
-                                      nn.BatchNorm2d(output),
+                                      nn.BatchNorm2d(next_layer_frames*8),
                                       nn.ReLU(True)])
         self.up_layer2 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*16, out_channels=next_layer_frames*8, kernel_size=4, stride=2, padding=1),
-                                      nn.BatchNorm2d(output),
+                                      nn.BatchNorm2d(next_layer_frames*8),
                                       nn.ReLU(True)])
         self.up_layer3 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*16, out_channels=next_layer_frames*8, kernel_size=4, stride=2, padding=1),
-                                      nn.BatchNorm2d(output),
+                                      nn.BatchNorm2d(next_layer_frames*8),
                                       nn.ReLU(True)])
         self.up_layer4 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*16, out_channels=next_layer_frames*4, kernel_size=4, stride=2, padding=1),                                      
-                                      nn.BatchNorm2d(output),
+                                      nn.BatchNorm2d(next_layer_frames*4),
                                       nn.ReLU(True)])
         self.up_layer5 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*8, out_channels=next_layer_frames*2, kernel_size=4, stride=2, padding=1),
-                                      nn.BatchNorm2d(output),
+                                      nn.BatchNorm2d(next_layer_frames*2),
                                       nn.ReLU(True)])
         self.up_layer6 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*4, out_channels=next_layer_frames, kernel_size=4, stride=2, padding=1),
-                                      nn.BatchNorm2d(output),
+                                      nn.BatchNorm2d(next_layer_frames),
                                       nn.ReLU(True)])
         self.up_layer7 = nn.Sequential(*[nn.ConvTranspose2d(in_channels=next_layer_frames*2, out_channels=output, kernel_size=4, stride=2, padding=1),
                                       nn.Sigmoid()])

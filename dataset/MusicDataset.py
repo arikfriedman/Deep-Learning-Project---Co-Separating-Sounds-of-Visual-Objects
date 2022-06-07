@@ -6,6 +6,7 @@ from torchvision.io import read_image
 import torchvision.transforms as T
 import pickle
 import numpy as np
+import torch
 
 # the files in data_dir will be enumerated from 000000, and contain pickles objects
 class MusicDataset(Dataset):
@@ -69,21 +70,26 @@ class MusicDataset(Dataset):
 
         pick_dict['classes'] = np.vstack(classes)
 
-        self_audios = [X['obj1']['audio']['stft'][0], X['obj2']['audio']['stft'][0]]  #array includes both videos data - 2 values
+        self_audios = [np.expand_dims(torch.FloatTensor(X['obj1']['audio']['stft'][0]), axis=0),
+                       np.expand_dims(torch.FloatTensor(X['obj1']['audio']['stft'][0]), axis=0),
+                       np.expand_dims(torch.FloatTensor(X['obj2']['audio']['stft'][0]), axis=0),
+                       np.expand_dims(torch.FloatTensor(X['obj2']['audio']['stft'][0]), axis=0)]  #array includes both videos data - 2 values
         pick_dict['audio_mags'] = np.vstack(self_audios)
 
         detected_objects = [T.ToTensor()(c[1]).unsqueeze(0) for c in X['obj1']['images'][:]]
         if len(detected_objects) == 1:
-            detected_objects += [None]
+            detected_objects += [0 * detected_objects[0]]
 
         detected_objects += [T.ToTensor()(c[1]).unsqueeze(0) for c in X['obj2']['images'][:]]
         if len(detected_objects) == 3:
-            detected_objects += [None]    #all detected objects in both video's'
+            detected_objects += [0 * detected_objects[2]]    #all detected objects in both video's'
 
         pick_dict['detections'] = np.vstack(detected_objects)
 
         mixed_audio = []
         mix = X['mix'][0]
+        mix = np.expand_dims(mix, axis=0)
+        num_objs = 4
         for n in range(num_objs):
             mixed_audio.append(torch.FloatTensor(mix).unsqueeze(0))
         mixed_audio = np.vstack(mixed_audio)
