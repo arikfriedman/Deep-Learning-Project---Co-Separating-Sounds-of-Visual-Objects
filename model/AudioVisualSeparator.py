@@ -16,46 +16,36 @@ class AudioVisualSeparator(nn.Module):
 
     '''X is the input and will in a format of a dictionary with several entries'''
     def forward(self, X):
-        videos = [X['obj1']['id']] + [X['obj2']['id']]
-        self_audios = [X['obj1']['audio']['stft'][0], X['obj2']['audio']['stft'][0]]  #array includes both videos data - 2 values
-        self_audios = np.vstack(self_audios)
+        vid_ids = X['ids']           # + [X['obj2']['id']]
+        audio_mags = X['audio_mags']            #['stft'][0], X['obj2']['audio']['stft'][0]]  #array includes both videos data - 2 values
+        mixed_audio = X['mixed_audio']
+        detected_objects = X['detections']
+        classes = X['classes']
 
-        detected_objects = [T.ToTensor()(c[1]).unsqueeze(0) for c in X['obj1']['images'][:]] +\
-                           [T.ToTensor()(c[1]).unsqueeze(0) for c in X['obj2']['images'][:]]    #all detected objects in both video's'
-        num_objs = len(detected_objects)
-        mixed_audio = []
-        mix = X['mix'][0]
-        for n in range(num_objs):
-            mixed_audio.append(torch.FloatTensor(mix).unsqueeze(0))
-        mixed_audio = np.vstack(mixed_audio)
-        mixed_audio = mixed_audio + 1e-10  # in order to make sure we don't divide by 0
-        mixed_audio = torch.from_numpy(mixed_audio)
-
-        detected_objects = np.vstack(detected_objects)
-        detected_objects = torch.from_numpy(detected_objects)
-        #detected_objects = T.ToTensor()(detected_objects)
-        weak_labels = [c[0] for c in X['obj1']['images'][:]] + [c[0] for c in X['obj2']['images'][:]]              #a label per detected object
         log_mixed_audio = torch.log(mixed_audio).detach()
 
         ''' mixed audio and audio are after STFT '''
         
         # mask for the object
-        ground_mask = self_audios / mixed_audio     #list of masks per video 
-        #should we clamp ? - mask = mask.clamp(0, 5)
+        ground_mask = audio_mags / mixed_audio     #list of masks per video
+        #should we clamp ? -
+        ground_mask = ground_mask.clamp(0, 5)
 
         # Resnet18 for the visual part of the detected object
         visual_vecs = self.visual(Variable(detected_objects, requires_grad=False))
 
-        # should we use here the forward func?
         mask_preds = self.uNet7Layer(log_mixed_audio, visual_vecs)
 
-        masks_applied = mask_preds * mixed_audio
+        masks_applied = mixed_audio * mask_preds
 
         # after this there will be an iSTFT in the next layer of the net if we would like to hear the sound...
 
-        audio_label_preds = self.classifier(torch.log(masks_applied + 1e-10))
+        spectro = torch.log(masks_applied + 1e-10)  # get log spectrogram
 
-        return {"ground_masks" : ground_mask, "predicted_audio_labels" : audio_label_preds, "predicted_masks" : mask_preds, "predicted_spectrograms" : masks_applied,
-                "visual_objects" : visual_vecs, "mixed_audios" : mixed_audio}#, "videos" : videos}
+        audio_label_preds = self.classifier(spectro)
+
+        return {"ground_masks" : ground_mask, "ground_labels" : classes, "predicted_audio_labels" : audio_label_preds,
+                "predicted_masks" : mask_preds, "predicted_spectrograms" : masks_applied,
+                "visual_objects" : visual_vecs, "mixed_audios" : mixed_audio, "videos" : vid_ids}
 
 '''https://github.com/rhgao/co-separation/blob/bd4f4fd51f2d6090e1566d20d4e0d0c8d83dd842/models/audioVisual_model.py'''
