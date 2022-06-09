@@ -105,9 +105,11 @@ def pickItems(path, log, parent):
 
     #a tuple of audio, sr
     audio, sr = librosa.load(os.path.join(path, wav_name), sr=11025)
+    '''
     min_a = min(audio)
     max_a = max(audio)
     audio = 2 * (audio - min_a) / (max_a - min_a) - 1
+    '''
     sample = sample_wav(audio)
     mags, phases = create_spectrogram(sample)
     obj_dict['audio'] = {'wave': (audio, sr), 'stft': (mags, phases)}
@@ -117,9 +119,11 @@ def pickItems(path, log, parent):
     for bbox in os.listdir(crop_path):
         im = Image.open(os.path.join(crop_path, bbox)).resize((224, 224))
         pix = np.asarray(im).astype('float32')
+        '''
         min_p = pix.min()
         max_p = pix.max()
         pix = (pix - min_p) / (max_p - min_p)
+        '''
         obj_dict['images'] += [(bbox.split('.')[0], pix)]
 
     vid_id = crop_name.split('_')[-1]
@@ -217,7 +221,13 @@ def iterate_files(dir, count, log, parent, source, target=r'/dsi/gannot-lab/data
                     log.write("-->> obj-2 : could not pick items for " + str(random_clip_path) + "\n")
                     continue
                 mix_stft = (obj1['audio']['wave'][0] + obj2['audio']['wave'][0]) / 2
-                mix_stft = librosa.util.normalize(mix_stft)
+
+                #mix_stft = librosa.util.normalize(mix_stft)
+
+                min_a = min(mix_stft)
+                max_a = max(mix_stft)
+                mix_stft = 2 * (mix_stft - min_a) / (max_a - min_a) - 1
+
                 sample = sample_wav(mix_stft)
                 mix_mags, mix_phases = create_spectrogram(sample)
 

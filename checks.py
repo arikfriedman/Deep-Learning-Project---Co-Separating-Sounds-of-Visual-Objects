@@ -12,7 +12,7 @@ if __name__ == "__main__":
         pass
         #print(type(param), param.size())
 
-    file_path = r'C:\Users\user\Desktop'
+    file_path = r'C:\Users\user\Desktop\data'
     dataset = MusicDataset(file_path, None, None)
     #
     # try:
@@ -38,6 +38,7 @@ if __name__ == "__main__":
     # print("len : " + str(len([[X['obj1']['audio']['stft']], [X['obj2']['audio']['stft']]][0][0])))
 
     X = dataset.__getitem__(0)
+    #print(X)
     Y = mod(X)
     print(Y)
 

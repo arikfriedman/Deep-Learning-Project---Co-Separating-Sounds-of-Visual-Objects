@@ -11,10 +11,10 @@ import torch
 # the files in data_dir will be enumerated from 000000, and contain pickles objects
 class MusicDataset(Dataset):
 
-    def __init__(self, data_dir, transform, log, train=True):
+    def __init__(self, data_dir, transform, log=None, train=True):
         self.log = log
         self.dir_path = data_dir
-        self.trsfm = transform
+        self.transform = transform
         self.size = 0
 
         try:
@@ -50,6 +50,7 @@ class MusicDataset(Dataset):
             pick = pickle.load(mix_file)
             mix_file.close()
         except OSError:
+            print(file_path)
             self.log.write("-->> Error with file " + file_path)
             pick = None
             return pick
@@ -57,7 +58,7 @@ class MusicDataset(Dataset):
         X = pick
         pick_dict = {}
 
-        ids = [X['obj1']['id']] + [X['obj2']['id']]
+        ids = [int(X['obj1']['id'])] + [int(X['obj2']['id'])]
         pick_dict['ids'] = np.vstack(ids)
 
         classes = [int(c[0]) for c in X['obj1']['images'][:]]
@@ -94,6 +95,7 @@ class MusicDataset(Dataset):
             mixed_audio.append(torch.FloatTensor(mix).unsqueeze(0))
         mixed_audio = np.vstack(mixed_audio)
         mixed_audio = mixed_audio + 1e-10  # in order to make sure we don't divide by 0
+        mixed_audio = mixed_audio
         pick_dict['mixed_audio'] = np.vstack(mixed_audio)
 
         return pick_dict
