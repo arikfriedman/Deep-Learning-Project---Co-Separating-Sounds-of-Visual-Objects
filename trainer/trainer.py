@@ -40,25 +40,28 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
         for batch_idx, pick in enumerate(self.data_loader):
             
-            data, target = pick.to(self.device), None#, target.to(self.device)
+            #data, target = pick.to(self.device), None#, target.to(self.device)
+            pick['mixed_audio'] = pick['mixed_audio'].to(self.device)
+            pick['detections'] = pick['detections'].to(self.device)
+            pick['classes'] = pick['classes'].to(self.device)
 
             self.optimizer.zero_grad()
-            output = self.model(data)
-            loss = self.criterion(output, data)
+            output = self.model(pick)
+            loss = self.criterion(output, pick)
             loss.backward()
             self.optimizer.step()
 
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
             for met in self.metric_ftns:
-                self.train_metrics.update(met.__name__, met(output, data))
+                self.train_metrics.update(met.__name__, met(output, pick))
 
             if batch_idx % self.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                self.writer.add_image('input', make_grid(pick['detections'].cpu(), nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:
                 break

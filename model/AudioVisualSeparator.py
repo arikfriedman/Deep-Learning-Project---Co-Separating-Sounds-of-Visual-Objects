@@ -7,6 +7,24 @@ from torch.autograd import Variable
 import torchvision.transforms as T
 import numpy as np
 
+
+    '''
+    ->  each object X has 2 dictionaries, each for a single clip with the following structure:
+        {
+            'id'     :   video id number
+            'audio'  :   { 'wave' : (wave, sr), 'stft' : (mags, phases) }
+            'images' :   [(class_id1, image), (class_id2, image),...] -> just 1 or 2 cropped images
+        }
+        
+    ->  and total:
+        
+        {
+            "obj1": obj1,
+            "obj2": obj2,
+            "mix": (mix_mags, mix_phases)
+        }
+    '''
+    
 class AudioVisualSeparator(nn.Module):
     def __init__(self):
         super(AudioVisualSeparator, self).__init__()
