@@ -7,7 +7,7 @@ class Visual:
     def create_visual_vector(self, input_channel=3, fc_out=512, pretrained_weights=''):
         
         resnet = torchvision.models.resnet18(pretrained=True)
-        resnet = ResNet18(resnet, pool_type="conv1x1", input_channel=3, with_fc=True, fc_in=7*7*128, fc_out=fc_out)
+        resnet = ResNet18(resnet, pool_type="conv1x1", input_channel=3, with_fc=True, fc_in=128, fc_out=fc_out)
 
         # if pretrained_weights != '':
         #     print('using pretrained weights for visual')

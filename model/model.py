@@ -43,17 +43,18 @@ class AudioVisualSeparator(nn.Module):
         vid_ids = X['ids']           # + [X['obj2']['id']]
         audio_mags = X['audio_mags']            #['stft'][0], X['obj2']['audio']['stft'][0]]  #array includes both videos data - 2 values
         mixed_audio = X['mixed_audio']
-        detected_objects = torch.from_numpy(X['detections'])
+        detected_objects = X['detections']
         classes = X['classes']
 
-        log_mixed_audio = torch.log(torch.from_numpy(mixed_audio)).detach()
+        log_mixed_audio = torch.log(mixed_audio).detach()
+        log_mixed_audio = log_mixed_audio.view(120, 1, 256, 256)
 
         ''' mixed audio and audio are after STFT '''
         
         # mask for the object
         ground_mask = audio_mags / mixed_audio     #list of masks per video
         #should we clamp ? -
-        ground_mask = torch.from_numpy(ground_mask).clamp(0, 5)
+        ground_mask = ground_mask.clamp(0, 5)
 
         # Resnet18 for the visual part of the detected object
         visual_vecs = self.visual(Variable(detected_objects, requires_grad=False))

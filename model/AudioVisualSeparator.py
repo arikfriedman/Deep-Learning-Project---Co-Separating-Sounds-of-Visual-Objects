@@ -8,22 +8,22 @@ import torchvision.transforms as T
 import numpy as np
 
 
-    '''
-    ->  each object X has 2 dictionaries, each for a single clip with the following structure:
-        {
-            'id'     :   video id number
-            'audio'  :   { 'wave' : (wave, sr), 'stft' : (mags, phases) }
-            'images' :   [(class_id1, image), (class_id2, image),...] -> just 1 or 2 cropped images
-        }
-        
-    ->  and total:
-        
-        {
-            "obj1": obj1,
-            "obj2": obj2,
-            "mix": (mix_mags, mix_phases)
-        }
-    '''
+'''
+->  each object X has 2 dictionaries, each for a single clip with the following structure:
+    {
+        'id'     :   video id number
+        'audio'  :   { 'wave' : (wave, sr), 'stft' : (mags, phases) }
+        'images' :   [(class_id1, image), (class_id2, image),...] -> just 1 or 2 cropped images
+    }
+    
+->  and total:
+    
+    {
+        "obj1": obj1,
+        "obj2": obj2,
+        "mix": (mix_mags, mix_phases)
+    }
+'''
     
 class AudioVisualSeparator(nn.Module):
     def __init__(self):
@@ -41,6 +41,7 @@ class AudioVisualSeparator(nn.Module):
         classes = X['classes']
 
         log_mixed_audio = torch.log(torch.from_numpy(mixed_audio)).detach()
+        log_mixed_audio = log_mixed_audio.view(120, 1, 256, 256)
 
         ''' mixed audio and audio are after STFT '''
         
