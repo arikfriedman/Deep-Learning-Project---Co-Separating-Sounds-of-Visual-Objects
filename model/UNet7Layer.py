@@ -3,7 +3,7 @@ import torch
 import torchvision
 
 class UNet7Layer(nn.Module):
-    def __init__(self, input=2, next_layer_frames=120, output=2):
+    def __init__(self, input=2, next_layer_frames=512, output=2):
         super(UNet7Layer, self).__init__()
         self.down_layer1 = nn.Sequential(*[nn.Conv2d(in_channels=input, out_channels=next_layer_frames, kernel_size=4, stride=2, padding=1),
                                       nn.BatchNorm2d(next_layer_frames),
@@ -65,7 +65,11 @@ class UNet7Layer(nn.Module):
         visual_in = visual_in.repeat(1, 1, down_7.shape[2], down_7.shape[3]) # down_7.shape[2] = 2, down_7.shape[3] = 2
         '''check this command on a stub vector'''
 
-        up_1 = self.up_layer1(torch.cat((visual_in, down_7), dim=1)) # here we concatenate the visual 512*2*2 block
+        print(visual_in.shape)
+        print(down_7.shape)
+
+        v = torch.cat((visual_in, down_7), dim=1)
+        up_1 = self.up_layer1(v) # here we concatenate the visual 512*2*2 block
         # to the 512*2*2 output of the down sampling to create a 1024*2*2 block
         up_2 = self.up_layer2(torch.cat((up_1, down_6), dim=1))
         up_3 = self.up_layer3(torch.cat((up_2, down_5), dim=1))
