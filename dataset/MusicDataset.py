@@ -112,5 +112,5 @@ normalize:  check for audio when to norm
 move tensor part to getitem
 pad with 0 or -1 and have 4 objects every time
 define __len__ in dataset?
-
+p
 '''
