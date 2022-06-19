@@ -26,7 +26,7 @@ class MusicDataset(Dataset):
         try:
             self.size = len(os.listdir(self.dir_path))
         except OSError:
-            log.write(" -->> " + self.dir_path + " is not a valid path\n")
+            self.log.write(" -->> " + self.dir_path + " is not a valid path\n")
 
     def __len__(self):
         return self.size
