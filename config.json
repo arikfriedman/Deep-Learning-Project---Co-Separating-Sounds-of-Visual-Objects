@@ -1,7 +1,7 @@
 
 {
     "name": "Mnist_LeNet",
-    "n_gpu": 1,
+    "n_gpu": 0,
 
     "arch": {
         "type": "AudioVisualSeparator",
@@ -10,7 +10,7 @@
     "data_loader": {
         "type": "MusicDataLoader",
         "args":{
-            "data_dir": "C:\\Users\\user\\Desktop\\data",
+            "data_dir": "/dsi/gannot-lab/datasets/Music/Batches",
             "batch_size": 128,
             "shuffle": true,
             "validation_split": 0.1,
