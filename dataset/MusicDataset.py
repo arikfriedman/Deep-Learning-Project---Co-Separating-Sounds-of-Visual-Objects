@@ -11,8 +11,14 @@ import torch
 # the files in data_dir will be enumerated from 000000, and contain pickles objects
 class MusicDataset(Dataset):
 
-    def __init__(self, data_dir, transform, log="/dsi/gannot-lab/datasets/Music/Logs/RunLog.txt", train=True):
+    def __init__(self, data_dir, transform, log=None, train=True):
         self.log = log
+        if self.log is None:
+            try:
+                self.log = open(r"/dsi/gannot-lab/datasets/Music/Logs/RunLog.txt", "x")
+            except:
+                self.log = open(r"/dsi/gannot-lab/datasets/Music/Logs/RunLog.txt", "w")
+
         self.dir_path = data_dir
         self.transform = transform
         self.size = 0
