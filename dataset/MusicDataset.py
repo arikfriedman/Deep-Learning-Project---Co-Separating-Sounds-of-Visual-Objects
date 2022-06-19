@@ -83,11 +83,11 @@ class MusicDataset(Dataset):
                        np.expand_dims(torch.FloatTensor(X['obj2']['audio']['stft'][0]), axis=0)]  #array includes both videos data - 2 values
         pick_dict['audio_mags'] = np.vstack(self_audios)
 
-        detected_objects = [self.transform(T.ToTensor()(c[1]).unsqueeze(0)) for c in X['obj1']['images'][:]]
+        detected_objects = [self.transform(c[1].unsqueeze(0)) for c in X['obj1']['images'][:]]
         if len(detected_objects) == 1:
             detected_objects += [0 * detected_objects[0]]
 
-        detected_objects += [self.transform(T.ToTensor()(c[1]).unsqueeze(0)) for c in X['obj2']['images'][:]]
+        detected_objects += [self.transform(c[1].unsqueeze(0)) for c in X['obj2']['images'][:]]
         if len(detected_objects) == 3:
             detected_objects += [0 * detected_objects[2]]    #all detected objects in both video's'
 
