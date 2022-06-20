@@ -44,7 +44,7 @@ class ResNet18(nn.Module):
             x = self.conv1x1(x)
         else:
             return x
-
+        print(x.shape)
         if self.with_fc:
             #x = x.view(-1, x.size(0)) # we want to flatten the vector, x.size(0) holds the number of pictures/spectograms
             x = self.fc(x)
