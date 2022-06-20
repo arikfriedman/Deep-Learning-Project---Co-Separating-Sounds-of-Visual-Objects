@@ -24,9 +24,10 @@ import numpy as np
         "mix": (mix_mags, mix_phases)
     }
 '''
-    
+
+'''    
 class AudioVisualSeparator(nn.Module):
-    def __init__(self):
+    def __init__(self, log):
         super(AudioVisualSeparator, self).__init__()
         self.visual = Visual().create_visual_vector()
         self.uNet7Layer = UNet7Layer(input=1)
@@ -41,7 +42,7 @@ class AudioVisualSeparator(nn.Module):
         classes = X['classes']
 
         log_mixed_audio = torch.log(torch.from_numpy(mixed_audio)).detach()
-        print(log_mixed_audio.shape)
+        self.log.write(log_mixed_audio.shape)
         log_mixed_audio = log_mixed_audio.view(128, 1, 256, 256)
 
         ''' mixed audio and audio are after STFT '''
@@ -70,3 +71,6 @@ class AudioVisualSeparator(nn.Module):
                 "visual_objects" : visual_vecs, "mixed_audios" : mixed_audio, "videos" : vid_ids}
 
 '''https://github.com/rhgao/co-separation/blob/bd4f4fd51f2d6090e1566d20d4e0d0c8d83dd842/models/audioVisual_model.py'''
+
+
+'''
