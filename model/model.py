@@ -57,6 +57,7 @@ class AudioVisualSeparator(nn.Module):
         ground_mask = ground_mask.clamp(0, 5)
 
         # Resnet18 for the visual part of the detected object
+        print(detected_objects.shape)
         visual_vecs = self.visual(Variable(detected_objects, requires_grad=False))
 
         mask_preds = self.uNet7Layer(log_mixed_audio, visual_vecs)
