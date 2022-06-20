@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class ResNet18(nn.Module):
 
-    def __init__(self, original_resnet, pool_type, input_channel, with_fc=False, fc_in=6272, fc_out=512):
+    def __init__(self, original_resnet, pool_type, input_channel, with_fc=False, fc_in=512, fc_out=512):
         super(ResNet18, self).__init__()
         
         # self.RN18 = torchvision.models.ResNet18(pretrained=True)
@@ -20,7 +20,7 @@ class ResNet18(nn.Module):
         # using the "self.input_layer". this first layer will replace the first original ResNet18's layer. Similarly, the last 2 layers
         # of the original Resnet18 are a fc layer and a softmax layer, which we are changing to our own fc layer, which its size also 
         # depends on whether we are dealing with visual or audio:
-        self.conv1 = nn.Conv2d(self.input_channel, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(self.input_channel, 64, kernel_size=70, stride=2, padding=3, bias=False)
         layers_list = [self.conv1]
         layers_list.extend(list(original_resnet.children())[1:-2])
         self.feature_extraction = nn.Sequential(*layers_list) #features before pooling
