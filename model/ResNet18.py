@@ -44,7 +44,7 @@ class ResNet18(nn.Module):
             x = self.conv1x1(x)
 
         if self.with_fc:
-            x = x.view(x.size(0), -1) # we want to flatten the vector, x.size(0) holds the number of pictures/spectograms
+            x = x.view(-1, x.size(0)) # we want to flatten the vector, x.size(0) holds the number of pictures/spectograms
             x = self.fc(x)
             if self.pool_type == 'conv1x1':
                 x = x.view(x.size(0), -1, 1, 1) # the visual tensor needs to have 4 dimensions so we go back from 2 to 4
