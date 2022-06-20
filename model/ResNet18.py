@@ -37,7 +37,7 @@ class ResNet18(nn.Module):
 
     def forward(self, x):
         x = self.feature_extraction(x)
-        print("shape = " + x.shape)
+        print(x.shape)
         if self.pool_type == 'maxpool':
             x = F.adaptive_max_pool2d(x, 1)
         elif self.pool_type == 'conv1x1':
