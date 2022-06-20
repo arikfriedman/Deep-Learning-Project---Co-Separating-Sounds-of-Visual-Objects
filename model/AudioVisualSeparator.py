@@ -45,7 +45,7 @@ class AudioVisualSeparator(nn.Module):
 
         log_mixed_audio = torch.log(torch.from_numpy(mixed_audio)).detach()
         self.log.write(log_mixed_audio.shape)
-        log_mixed_audio = log_mixed_audio.view(128, 1, 256, 256)
+        log_mixed_audio = log_mixed_audio.view(128, 1, 512, 256)
         
         '''mixed audio and audio are after STFT '''
              
