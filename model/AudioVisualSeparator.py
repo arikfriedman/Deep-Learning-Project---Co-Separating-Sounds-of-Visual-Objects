@@ -41,7 +41,7 @@ class AudioVisualSeparator(nn.Module):
         classes = X['classes']
 
         log_mixed_audio = torch.log(torch.from_numpy(mixed_audio)).detach()
-        log_mixed_audio = log_mixed_audio.view(128, 1, 256, 256)
+        #log_mixed_audio = log_mixed_audio.view(128, 1, 256, 256)
 
         ''' mixed audio and audio are after STFT '''
         
@@ -52,7 +52,7 @@ class AudioVisualSeparator(nn.Module):
 
         # Resnet18 for the visual part of the detected object
         visual_vecs = self.visual(Variable(detected_objects, requires_grad=False))
-        visual_vecs = visual_vecs.view(128, 1, 512, 256)
+        #visual_vecs = visual_vecs.view(128, 1, 512, 256)
 
         mask_preds = self.uNet7Layer(log_mixed_audio, visual_vecs)
 
